@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Photo Capture - Fashion Recommendation App{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-6 mb-4"><i class="fas fa-camera"></i> Photo Capture & Analysis</h1>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Webcam Capture -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-video"></i> Live Camera Capture</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div id="camera-container" class="mb-3">
+                        <video id="video" width="100%" height="300" autoplay style="border-radius: 8px; background: #f8f9fa;"></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="capture_type" class="form-label">Photo Type</label>
+                        <select class="form-select" id="capture_type">
+                            <option value="face">Face Photo (for face shape & skin tone analysis)</option>
+                            <option value="full_body">Full Body Photo (for body type analysis)</option>
+                            <option value="outfit">Outfit Photo (for style analysis)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button id="start-camera" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Start Camera
+                        </button>
+                        <button id="capture-photo" class="btn btn-success" disabled>
+                            <i class="fas fa-camera"></i> Capture Photo
+                        </button>
+                        <button id="stop-camera" class="btn btn-danger" disabled>
+                            <i class="fas fa-stop"></i> Stop Camera
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-upload"></i> Upload Photo</h5>
+                </div>
+                <div class="card-body">
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file-input" class="form-label">Select Photo</label>
+                            <input type="file" class="form-control" id="file-input" name="file" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPG, PNG, GIF (Max 16MB)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="upload_type" class="form-label">Photo Type</label>
+                            <select class="form-select" id="upload_type" name="image_type">
+                                <option value="face">Face Photo</option>
+                                <option value="full_body">Full Body Photo</option>
+                                <option value="outfit">Outfit Photo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div id="image-preview" class="text-center" style="display: none;">
+                                <img id="preview-img" src="" alt="Preview" class="img-fluid" style="max-height: 200px; border-radius: 8px;">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-upload"></i> Upload & Analyze
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Results -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="analysis-results" class="card" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Analysis Results</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="results-content">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="text-center mt-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Analyzing...</span>
+        </div>
+        <p class="mt-2">Analyzing your photo...</p>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Photo Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-user-circle text-primary"></i> Face Photos</h6>
+                            <ul class="small">
+                                <li>Good lighting on your face</li>
+                                <li>Look directly at camera</li>
+                                <li>Remove glasses if possible</li>
+                                <li>Neutral expression</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-male text-success"></i> Full Body Photos</h6>
+                            <ul class="small">
+                                <li>Stand straight, arms at sides</li>
+                                <li>Wear fitted clothing</li>
+                                <li>Plain background preferred</li>
+                                <li>Full body visible</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-tshirt text-info"></i> Outfit Photos</h6>
+                            <ul class="small">
+                                <li>Clear view of clothing</li>
+                                <li>Good lighting</li>
+                                <li>Include accessories</li>
+                                <li>Multiple angles helpful</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let context = canvas.getContext('2d');
+let stream = null;
+
+// Camera controls
+document.getElementById('start-camera').addEventListener('click', async function() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 }, 
+                height: { ideal: 480 } 
+            } 
+        });
+        video.srcObject = stream;
+        
+        document.getElementById('start-camera').disabled = true;
+        document.getElementById('capture-photo').disabled = false;
+        document.getElementById('stop-camera').disabled = false;
+    } catch (err) {
+        alert('Error accessing camera: ' + err.message);
+    }
+});
+
+document.getElementById('stop-camera').addEventListener('click', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        
+        document.getElementById('start-camera').disabled = false;
+        document.getElementById('capture-photo').disabled = true;
+        document.getElementById('stop-camera').disabled = true;
+    }
+});
+
+document.getElementById('capture-photo').addEventListener('click', function() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/png');
+    const captureType = document.getElementById('capture_type').value;
+    
+    // Show loading
+    document.getElementById('loading-spinner').style.display = 'block';
+    
+    // Send to server
+    fetch('/webcam_capture', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            image_data: imageData,
+            image_type: captureType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading-spinner').style.display = 'none';
+        if (data.success) {
+            showAnalysisResults(data);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading-spinner').style.display = 'none';
+        alert('Error: ' + error.message);
+    });
+});
+
+// File upload
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('upload-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Show loading
+    document.getElementById('loading-spinner').style.display = 'block';
+    
+    fetch('/upload_image', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading-spinner').style.display = 'none';
+        if (data.success) {
+            showAnalysisResults(data);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading-spinner').style.display = 'none';
+        alert('Error: ' + error.message);
+    });
+});
+
+function showAnalysisResults(data) {
+    const resultsDiv = document.getElementById('results-content');
+    let html = '';
+    
+    if (data.analysis) {
+        if (data.analysis.face_shape) {
+            html += `
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-user-circle fa-3x text-primary mb-2"></i>
+                        <h6>Face Shape</h6>
+                        <p class="fw-bold">${data.analysis.face_shape}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.analysis.skin_tone) {
+            html += `
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-palette fa-3x text-success mb-2"></i>
+                        <h6>Skin Tone</h6>
+                        <p class="fw-bold">${data.analysis.skin_tone}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.analysis.dominant_colors && data.analysis.dominant_colors.length > 0) {
+            html += `
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-paint-brush fa-3x text-info mb-2"></i>
+                        <h6>Dominant Colors</h6>
+                        <div class="d-flex justify-content-center gap-1">
+            `;
+            data.analysis.dominant_colors.forEach(color => {
+                html += `<div style="width: 20px; height: 20px; background-color: ${color}; border-radius: 50%; border: 1px solid #ccc;"></div>`;
+            });
+            html += `</div></div></div>`;
+        }
+    } else {
+        html = '<div class="col-12"><p class="text-warning">Analysis completed but results not available.</p></div>';
+    }
+    
+    resultsDiv.innerHTML = html;
+    document.getElementById('analysis-results').style.display = 'block';
+    
+    // Scroll to results
+    document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

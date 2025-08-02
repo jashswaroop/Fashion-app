@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Fashion Recommendation App{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-6 mb-4"><i class="fas fa-user-circle"></i> My Profile</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit"></i> Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="age" class="form-label">Age</label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       value="{{ user.age or '' }}" min="13" max="100">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="Female" {{ 'selected' if user.gender == 'Female' }}>Female</option>
+                                    <option value="Male" {{ 'selected' if user.gender == 'Male' }}>Male</option>
+                                    <option value="Non-binary" {{ 'selected' if user.gender == 'Non-binary' }}>Non-binary</option>
+                                    <option value="Prefer not to say" {{ 'selected' if user.gender == 'Prefer not to say' }}>Prefer not to say</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="body_type" class="form-label">Body Type</label>
+                                <select class="form-select" id="body_type" name="body_type">
+                                    <option value="">Select Body Type</option>
+                                    <option value="Pear" {{ 'selected' if user.body_type == 'Pear' }}>Pear</option>
+                                    <option value="Apple" {{ 'selected' if user.body_type == 'Apple' }}>Apple</option>
+                                    <option value="Hourglass" {{ 'selected' if user.body_type == 'Hourglass' }}>Hourglass</option>
+                                    <option value="Rectangle" {{ 'selected' if user.body_type == 'Rectangle' }}>Rectangle</option>
+                                    <option value="Inverted Triangle" {{ 'selected' if user.body_type == 'Inverted Triangle' }}>Inverted Triangle</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="style_preference" class="form-label">Style Preference</label>
+                                <select class="form-select" id="style_preference" name="style_preference">
+                                    <option value="">Select Style</option>
+                                    <option value="Casual" {{ 'selected' if user.style_preference == 'Casual' }}>Casual</option>
+                                    <option value="Business" {{ 'selected' if user.style_preference == 'Business' }}>Business</option>
+                                    <option value="Formal" {{ 'selected' if user.style_preference == 'Formal' }}>Formal</option>
+                                    <option value="Bohemian" {{ 'selected' if user.style_preference == 'Bohemian' }}>Bohemian</option>
+                                    <option value="Minimalist" {{ 'selected' if user.style_preference == 'Minimalist' }}>Minimalist</option>
+                                    <option value="Trendy" {{ 'selected' if user.style_preference == 'Trendy' }}>Trendy</option>
+                                    <option value="Classic" {{ 'selected' if user.style_preference == 'Classic' }}>Classic</option>
+                                    <option value="Edgy" {{ 'selected' if user.style_preference == 'Edgy' }}>Edgy</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="color_preference" class="form-label">Color Preferences</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Black" id="color_black">
+                                            <label class="form-check-label" for="color_black">Black</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="White" id="color_white">
+                                            <label class="form-check-label" for="color_white">White</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Red" id="color_red">
+                                            <label class="form-check-label" for="color_red">Red</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Blue" id="color_blue">
+                                            <label class="form-check-label" for="color_blue">Blue</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Green" id="color_green">
+                                            <label class="form-check-label" for="color_green">Green</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Pink" id="color_pink">
+                                            <label class="form-check-label" for="color_pink">Pink</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Purple" id="color_purple">
+                                            <label class="form-check-label" for="color_purple">Purple</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="Neutral" id="color_neutral">
+                                            <label class="form-check-label" for="color_neutral">Neutral Tones</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="color_preference" name="color_preference" value="{{ user.color_preference or '' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="size_preference" class="form-label">Size</label>
+                                <select class="form-select" id="size_preference" name="size_preference">
+                                    <option value="">Select Size</option>
+                                    <option value="XS" {{ 'selected' if user.size_preference == 'XS' }}>XS</option>
+                                    <option value="S" {{ 'selected' if user.size_preference == 'S' }}>S</option>
+                                    <option value="M" {{ 'selected' if user.size_preference == 'M' }}>M</option>
+                                    <option value="L" {{ 'selected' if user.size_preference == 'L' }}>L</option>
+                                    <option value="XL" {{ 'selected' if user.size_preference == 'XL' }}>XL</option>
+                                    <option value="XXL" {{ 'selected' if user.size_preference == 'XXL' }}>XXL</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="budget_range" class="form-label">Budget Range</label>
+                                <select class="form-select" id="budget_range" name="budget_range">
+                                    <option value="">Select Budget</option>
+                                    <option value="Under $50" {{ 'selected' if user.budget_range == 'Under $50' }}>Under $50</option>
+                                    <option value="$50 - $100" {{ 'selected' if user.budget_range == '$50 - $100' }}>$50 - $100</option>
+                                    <option value="$100 - $200" {{ 'selected' if user.budget_range == '$100 - $200' }}>$100 - $200</option>
+                                    <option value="$200 - $500" {{ 'selected' if user.budget_range == '$200 - $500' }}>$200 - $500</option>
+                                    <option value="Over $500" {{ 'selected' if user.budget_range == 'Over $500' }}>Over $500</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="d-flex gap-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Profile
+                                    </button>
+                                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Profile Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6><i class="fas fa-lightbulb text-warning"></i> Complete Your Profile</h6>
+                        <p class="small text-muted">The more information you provide, the better our AI can recommend clothing that matches your style and preferences.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-palette text-info"></i> Color Analysis</h6>
+                        <p class="small text-muted">Select colors that you feel confident wearing. Our AI will use this to suggest complementary colors.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-ruler text-success"></i> Body Type</h6>
+                        <p class="small text-muted">Knowing your body type helps us recommend clothing that flatters your figure.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle color preferences
+    const colorCheckboxes = document.querySelectorAll('input[type="checkbox"][value]');
+    const colorPreferenceInput = document.getElementById('color_preference');
+    
+    // Load existing color preferences
+    if (colorPreferenceInput.value) {
+        const selectedColors = colorPreferenceInput.value.split(',');
+        colorCheckboxes.forEach(checkbox => {
+            if (selectedColors.includes(checkbox.value)) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    // Update color preferences when checkboxes change
+    colorCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const selectedColors = Array.from(colorCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            colorPreferenceInput.value = selectedColors.join(',');
+        });
+    });
+});
+</script>
+{% endblock %}
