@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+
+{% block title %}Fashion Style Questionnaire - Fashion Recommendation App{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-6 mb-4"><i class="fas fa-clipboard-list"></i> Fashion Style Questionnaire</h1>
+            <p class="lead text-muted mb-4">Help us understand your style preferences to provide personalized outfit recommendations with shopping links!</p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_fashion_preferences') }}" id="fashionQuestionnaireForm">
+        <!-- Lifestyle Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Lifestyle & Work Environment</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">What best describes your lifestyle?</label>
+                        <select class="form-select" name="lifestyle" required>
+                            <option value="">Select your lifestyle</option>
+                            <option value="professional">Professional/Corporate</option>
+                            <option value="creative">Creative/Artistic</option>
+                            <option value="active">Active/Sporty</option>
+                            <option value="casual">Casual/Relaxed</option>
+                            <option value="social">Social/Outgoing</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Work Environment</label>
+                        <select class="form-select" name="work_environment" required>
+                            <option value="">Select work environment</option>
+                            <option value="corporate">Corporate Office</option>
+                            <option value="business">Business Casual</option>
+                            <option value="creative">Creative/Casual</option>
+                            <option value="remote">Work from Home</option>
+                            <option value="retail">Customer-Facing</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Social Activities (Select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="networking" id="networking">
+                                <label class="form-check-label" for="networking">Networking Events</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="parties" id="parties">
+                                <label class="form-check-label" for="parties">Parties/Celebrations</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="dining" id="dining">
+                                <label class="form-check-label" for="dining">Fine Dining</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="casual_hangouts" id="casual_hangouts">
+                                <label class="form-check-label" for="casual_hangouts">Casual Hangouts</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="fitness" id="fitness">
+                                <label class="form-check-label" for="fitness">Fitness/Sports</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="art_events" id="art_events">
+                                <label class="form-check-label" for="art_events">Art/Cultural Events</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style Preferences Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-palette"></i> Style Preferences</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Style Inspiration (Select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="classic" id="classic">
+                                <label class="form-check-label" for="classic">Classic/Timeless</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="trendy" id="trendy">
+                                <label class="form-check-label" for="trendy">Trendy/Fashion-Forward</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="bohemian" id="bohemian">
+                                <label class="form-check-label" for="bohemian">Bohemian/Free-Spirited</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="minimalist" id="minimalist">
+                                <label class="form-check-label" for="minimalist">Minimalist/Clean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="edgy" id="edgy">
+                                <label class="form-check-label" for="edgy">Edgy/Bold</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="romantic" id="romantic">
+                                <label class="form-check-label" for="romantic">Romantic/Feminine</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="sporty" id="sporty">
+                                <label class="form-check-label" for="sporty">Sporty/Athletic</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="style_inspiration" value="vintage" id="vintage">
+                                <label class="form-check-label" for="vintage">Vintage/Retro</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preferred Clothing Fit</label>
+                        <select class="form-select" name="clothing_fit" required>
+                            <option value="">Select preferred fit</option>
+                            <option value="fitted">Fitted/Tailored</option>
+                            <option value="regular">Regular/Standard</option>
+                            <option value="relaxed">Relaxed/Loose</option>
+                            <option value="oversized">Oversized</option>
+                            <option value="varies">Varies by Item</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fashion Risk Tolerance</label>
+                        <select class="form-select" name="fashion_risk" required>
+                            <option value="">Select risk level</option>
+                            <option value="conservative">Conservative - Stick to classics</option>
+                            <option value="moderate">Moderate - Some trends, mostly safe</option>
+                            <option value="adventurous">Adventurous - Love trying new trends</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Comfort vs Style Priority</label>
+                        <select class="form-select" name="comfort_vs_style" required>
+                            <option value="">Select priority</option>
+                            <option value="comfort">Comfort First</option>
+                            <option value="balanced">Balanced</option>
+                            <option value="style">Style First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Seasonal Preference</label>
+                        <select class="form-select" name="seasonal_preference">
+                            <option value="all_seasons">All Seasons</option>
+                            <option value="spring_summer">Spring/Summer Focus</option>
+                            <option value="fall_winter">Fall/Winter Focus</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Preferences Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-paint-brush"></i> Color Preferences</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Preferred Colors (Select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="black" id="black">
+                                <label class="form-check-label" for="black">Black</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="white" id="white">
+                                <label class="form-check-label" for="white">White</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="gray" id="gray">
+                                <label class="form-check-label" for="gray">Gray</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="navy" id="navy">
+                                <label class="form-check-label" for="navy">Navy</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="blue" id="blue">
+                                <label class="form-check-label" for="blue">Blue</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="green" id="green">
+                                <label class="form-check-label" for="green">Green</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="teal" id="teal">
+                                <label class="form-check-label" for="teal">Teal</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="purple" id="purple">
+                                <label class="form-check-label" for="purple">Purple</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="red" id="red">
+                                <label class="form-check-label" for="red">Red</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="pink" id="pink">
+                                <label class="form-check-label" for="pink">Pink</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="orange" id="orange">
+                                <label class="form-check-label" for="orange">Orange</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="yellow" id="yellow">
+                                <label class="form-check-label" for="yellow">Yellow</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="brown" id="brown">
+                                <label class="form-check-label" for="brown">Brown</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="beige" id="beige">
+                                <label class="form-check-label" for="beige">Beige</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="camel" id="camel">
+                                <label class="form-check-label" for="camel">Camel</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_colors" value="metallics" id="metallics">
+                                <label class="form-check-label" for="metallics">Metallics</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Colors to Avoid (Select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="bright_yellow" id="avoid_bright_yellow">
+                                <label class="form-check-label" for="avoid_bright_yellow">Bright Yellow</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="neon_colors" id="avoid_neon">
+                                <label class="form-check-label" for="avoid_neon">Neon Colors</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="pastels" id="avoid_pastels">
+                                <label class="form-check-label" for="avoid_pastels">Pastels</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="earth_tones" id="avoid_earth">
+                                <label class="form-check-label" for="avoid_earth">Earth Tones</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="jewel_tones" id="avoid_jewel">
+                                <label class="form-check-label" for="avoid_jewel">Jewel Tones</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="avoided_colors" value="none" id="avoid_none">
+                                <label class="form-check-label" for="avoid_none">None - Open to All Colors</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Continue button for next section -->
+        <div class="text-center mb-4">
+            <button type="button" class="btn btn-primary btn-lg" onclick="showNextSection()">
+                Continue to Shopping Preferences <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Shopping Preferences Section (Initially Hidden) -->
+        <div class="card mb-4" id="shoppingSection" style="display: none;">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-shopping-bag"></i> Shopping & Budget Preferences</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Budget per Item</label>
+                        <select class="form-select" name="budget_per_item" required>
+                            <option value="">Select budget range</option>
+                            <option value="under_25">Under $25</option>
+                            <option value="25_50">$25 - $50</option>
+                            <option value="50_100">$50 - $100</option>
+                            <option value="100_200">$100 - $200</option>
+                            <option value="over_200">Over $200</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Shopping Frequency</label>
+                        <select class="form-select" name="shopping_frequency">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="seasonally">Seasonally</option>
+                            <option value="rarely">Rarely</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Brand Preference</label>
+                        <select class="form-select" name="brand_preference">
+                            <option value="no_preference">No Preference</option>
+                            <option value="designer">Designer Brands</option>
+                            <option value="mid_range">Mid-Range Brands</option>
+                            <option value="budget">Budget-Friendly</option>
+                            <option value="sustainable">Sustainable Brands</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Sustainability Importance</label>
+                        <select class="form-select" name="sustainability_importance">
+                            <option value="very_important">Very Important</option>
+                            <option value="important">Important</option>
+                            <option value="somewhat">Somewhat Important</option>
+                            <option value="not_much">Not Very Important</option>
+                            <option value="not_important">Not Important</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button (Initially Hidden) -->
+        <div class="text-center" id="submitSection" style="display: none;">
+            <button type="submit" class="btn btn-success btn-lg" onclick="console.log('Submit button clicked')">
+                <i class="fas fa-magic"></i> Get My Personalized Style Recommendations
+            </button>
+        </div>
+
+        <!-- Debug: Always visible submit button for testing -->
+        <div class="text-center mt-3">
+            <button type="button" class="btn btn-warning" onclick="submitFormDirectly()">
+                🔧 Debug: Submit Form Now
+            </button>
+            <br><br>
+            <a href="{{ url_for('submit_fashion_preferences') }}" class="btn btn-info">
+                🔗 Test Route Direct Link
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function showNextSection() {
+    document.getElementById('shoppingSection').style.display = 'block';
+    document.getElementById('submitSection').style.display = 'block';
+
+    // Scroll to the shopping section
+    document.getElementById('shoppingSection').scrollIntoView({
+        behavior: 'smooth'
+    });
+}
+
+function submitFormDirectly() {
+    console.log('Direct form submission triggered');
+
+    // Set default values for required fields if they're empty
+    const requiredDefaults = {
+        'lifestyle': 'professional',
+        'work_environment': 'corporate',
+        'clothing_fit': 'fitted',
+        'budget_per_item': '100_200',
+        'fashion_risk': 'moderate'
+    };
+
+    Object.keys(requiredDefaults).forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field && !field.value) {
+            field.value = requiredDefaults[fieldName];
+            console.log(`Set default value for ${fieldName}: ${requiredDefaults[fieldName]}`);
+        }
+    });
+
+    // Submit the form
+    console.log('Submitting form...');
+    document.getElementById('fashionQuestionnaireForm').submit();
+}
+
+// Form validation
+document.getElementById('fashionQuestionnaireForm').addEventListener('submit', function(e) {
+    console.log('Form submission attempted');
+
+    // Check only the most essential fields
+    const essentialFields = ['lifestyle', 'work_environment', 'clothing_fit', 'budget_per_item', 'fashion_risk'];
+    let isValid = true;
+    let missingFields = [];
+
+    essentialFields.forEach(fieldName => {
+        const field = this.querySelector(`[name="${fieldName}"]`);
+        if (field && !field.value) {
+            isValid = false;
+            missingFields.push(fieldName);
+            field.classList.add('is-invalid');
+        } else if (field) {
+            field.classList.remove('is-invalid');
+        }
+    });
+
+    if (!isValid) {
+        e.preventDefault();
+        alert(`Please fill in these required fields: ${missingFields.join(', ')}`);
+        console.log('Form validation failed:', missingFields);
+    } else {
+        console.log('Form validation passed, submitting...');
+        // Add a loading indicator
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Recommendations...';
+            submitBtn.disabled = true;
+        }
+    }
+});
+</script>
+{% endblock %}
