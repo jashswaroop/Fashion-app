@@ -1,125 +1,107 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero-section">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Discover Your Perfect Style</h1>
-                <p class="lead mb-4">Get personalized fashion recommendations based on your unique style, body type, and preferences using advanced AI technology.</p>
+<div id="parallax-container" class="relative h-screen bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80');">
+    <div class="absolute inset-0 bg-black opacity-50"></div>
+    <div class="relative z-10 flex items-center justify-center h-full text-center text-white">
+        <div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 animate-fade-in-down">Discover Your Perfect Style</h1>
+            <p class="text-lg md:text-xl mb-8 animate-fade-in-up">Get personalized fashion recommendations based on your unique style, body type, and preferences using advanced AI technology.</p>
+            <div class="flex justify-center gap-4">
                 {% if not current_user.is_authenticated %}
-                <div class="d-flex gap-3">
-                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Login</a>
-                </div>
+                    <a href="{{ url_for('register') }}" class="btn-3d bg-pink-500 text-white px-8 py-3 rounded-full text-lg font-semibold">Get Started</a>
+                    <a href="{{ url_for('login') }}" class="btn-3d bg-transparent border-2 border-white text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-white hover:text-black transition-colors duration-300">Login</a>
                 {% else %}
-                <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">Go to Dashboard</a>
+                    <a href="{{ url_for('dashboard') }}" class="btn-3d bg-pink-500 text-white px-8 py-3 rounded-full text-lg font-semibold">Go to Dashboard</a>
                 {% endif %}
             </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-magic fa-10x opacity-75"></i>
+        </div>
+    </div>
+</div>
+
+<div class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-3">Key Features</h2>
+            <p class="text-gray-600">Everything you need for personalized fashion recommendations</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="card-3d bg-gray-50 p-8 rounded-lg shadow-lg">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-circle fa-3x text-pink-500"></i>
+                </div>
+                <h5 class="text-xl font-bold text-center mb-2">Personal Profile</h5>
+                <p class="text-gray-600 text-center">Create detailed profiles with style preferences, body measurements, and fashion goals.</p>
+            </div>
+
+            <div class="card-3d bg-gray-50 p-8 rounded-lg shadow-lg">
+                <div class="text-center mb-4">
+                    <i class="fas fa-camera fa-3x text-pink-500"></i>
+                </div>
+                <h5 class="text-xl font-bold text-center mb-2">Image Analysis</h5>
+                <p class="text-gray-600 text-center">Upload photos for AI-powered analysis of your body shape, skin tone, and style preferences.</p>
+            </div>
+
+            <div class="card-3d bg-gray-50 p-8 rounded-lg shadow-lg">
+                <div class="text-center mb-4">
+                    <i class="fas fa-brain fa-3x text-pink-500"></i>
+                </div>
+                <h5 class="text-xl font-bold text-center mb-2">AI Recommendations</h5>
+                <p class="text-gray-600 text-center">Get personalized clothing and accessory recommendations based on advanced AI algorithms.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container py-5">
-    <div class="row text-center mb-5">
-        <div class="col-12">
-            <h2 class="display-5 fw-bold mb-3">Key Features</h2>
-            <p class="lead text-muted">Everything you need for personalized fashion recommendations</p>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-user-circle fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Personal Profile</h5>
-                    <p class="card-text">Create detailed profiles with style preferences, body measurements, and fashion goals.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-camera fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Image Analysis</h5>
-                    <p class="card-text">Upload photos for AI-powered analysis of your body shape, skin tone, and style preferences.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-brain fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">AI Recommendations</h5>
-                    <p class="card-text">Get personalized clothing and accessory recommendations based on advanced AI algorithms.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-palette fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Color Analysis</h5>
-                    <p class="card-text">Discover colors that complement your skin tone and enhance your natural beauty.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-shopping-bag fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Smart Shopping</h5>
-                    <p class="card-text">Get direct links to purchase recommended items from various fashion retailers.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 feature-card">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-chart-line fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Style Analytics</h5>
-                    <p class="card-text">Track your style evolution and get insights into your fashion preferences over time.</p>
-                </div>
-            </div>
-        </div>
+<div class="bg-gray-100 py-16">
+    <div class="container mx-auto px-6 text-center">
+        <h3 class="text-3xl font-bold text-gray-800 mb-4">Ready to Transform Your Style?</h3>
+        <p class="text-gray-600 mb-8">Join thousands of users who have discovered their perfect style with our AI-powered fashion recommendations.</p>
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('register') }}" class="btn-3d bg-pink-500 text-white px-8 py-4 rounded-full text-lg font-semibold">Start Your Style Journey</a>
+        {% endif %}
     </div>
 </div>
 
-<div class="bg-light py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h3 class="fw-bold mb-3">Ready to Transform Your Style?</h3>
-                <p class="lead mb-4">Join thousands of users who have discovered their perfect style with our AI-powered fashion recommendations.</p>
-                {% if not current_user.is_authenticated %}
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Start Your Style Journey</a>
-                {% endif %}
-            </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-sparkles fa-8x text-primary opacity-75"></i>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+    const parallaxContainer = document.getElementById('parallax-container');
+
+    window.addEventListener('scroll', () => {
+        let offset = window.pageYOffset;
+        parallaxContainer.style.backgroundPositionY = offset * 0.7 + 'px';
+    });
+</script>
+
+<style>
+    @keyframes fade-in-down {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-in-up {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-down {
+        animation: fade-in-down 1s ease-out forwards;
+    }
+
+    .animate-fade-in-up {
+        animation: fade-in-up 1s ease-out 0.5s forwards;
+    }
+</style>
 {% endblock %}
