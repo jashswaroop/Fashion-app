@@ -1,0 +1,500 @@
+{% extends "modern_base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="welcome-card">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h1 class="welcome-title">Welcome back, {{ session.get('username', 'Fashionista') }}!</h1>
+                        <p class="welcome-subtitle">Ready to discover your next perfect look?</p>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <div class="quick-actions">
+                            <a href="{{ url_for('capture_photo') }}" class="btn-modern me-2">
+                                <i class="fas fa-camera"></i>
+                                New Analysis
+                            </a>
+                            <a href="{{ url_for('recommendations') }}" class="btn-modern btn-secondary">
+                                <i class="fas fa-star"></i>
+                                View Recommendations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ user_stats.get('total_analyses', 0) }}</h3>
+                    <p class="stat-label">Style Analyses</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ user_stats.get('color_analyses', 0) }}</h3>
+                    <p class="stat-label">Color Matches</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tshirt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ user_stats.get('outfit_recommendations', 0) }}</h3>
+                    <p class="stat-label">Outfit Ideas</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ user_stats.get('style_score', 85) }}%</h3>
+                    <p class="stat-label">Style Score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- Recent Analysis -->
+        <div class="col-lg-8">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-history"></i> Recent Analysis</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_analysis %}
+                    <div class="analysis-preview">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                {% if recent_analysis.image_path %}
+                                <img src="{{ url_for('static', filename=recent_analysis.image_path) }}" 
+                                     alt="Recent Analysis" class="analysis-image">
+                                {% else %}
+                                <div class="analysis-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h5>{{ recent_analysis.face_shape or 'Face Shape Analysis' }}</h5>
+                                <p class="text-muted">{{ recent_analysis.created_at.strftime('%B %d, %Y') }}</p>
+                                <div class="analysis-tags">
+                                    {% if recent_analysis.dominant_color %}
+                                    <span class="tag">{{ recent_analysis.dominant_color }}</span>
+                                    {% endif %}
+                                    {% if recent_analysis.face_shape %}
+                                    <span class="tag">{{ recent_analysis.face_shape }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <a href="{{ url_for('recommendations') }}" class="btn-modern">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-camera"></i>
+                        <h5>No Analysis Yet</h5>
+                        <p>Start your style journey by taking your first photo analysis!</p>
+                        <a href="{{ url_for('capture_photo') }}" class="btn-modern">
+                            <i class="fas fa-camera"></i>
+                            Take First Photo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="quick-action-grid">
+                        <a href="{{ url_for('capture_photo') }}" class="quick-action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <span>Photo Analysis</span>
+                        </a>
+                        
+                        <a href="{{ url_for('fashion_questionnaire') }}" class="quick-action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <span>Style Quiz</span>
+                        </a>
+                        
+                        <a href="{{ url_for('recommendations') }}" class="quick-action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>Recommendations</span>
+                        </a>
+                        
+                        <a href="#" class="quick-action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <span>Shop Looks</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style Insights -->
+    <div class="row g-4 mt-4">
+        <div class="col-lg-6">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-chart-pie"></i> Your Style Profile</h4>
+                </div>
+                <div class="card-body">
+                    {% if style_profile %}
+                    <div class="style-insights">
+                        <div class="insight-item">
+                            <span class="insight-label">Dominant Style:</span>
+                            <span class="insight-value">{{ style_profile.get('primary_style', 'Classic') }}</span>
+                        </div>
+                        <div class="insight-item">
+                            <span class="insight-label">Color Season:</span>
+                            <span class="insight-value">{{ style_profile.get('color_season', 'Spring') }}</span>
+                        </div>
+                        <div class="insight-item">
+                            <span class="insight-label">Body Type:</span>
+                            <span class="insight-value">{{ style_profile.get('body_type', 'Balanced') }}</span>
+                        </div>
+                        <div class="insight-item">
+                            <span class="insight-label">Lifestyle:</span>
+                            <span class="insight-value">{{ style_profile.get('lifestyle', 'Professional') }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-user-circle"></i>
+                        <h5>Build Your Profile</h5>
+                        <p>Complete our style quiz to get personalized insights!</p>
+                        <a href="{{ url_for('fashion_questionnaire') }}" class="btn-modern">
+                            Start Quiz
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-trending-up"></i> Style Trends</h4>
+                </div>
+                <div class="card-body">
+                    <div class="trend-list">
+                        <div class="trend-item">
+                            <div class="trend-icon">🌟</div>
+                            <div class="trend-content">
+                                <h6>Sustainable Fashion</h6>
+                                <p>Eco-friendly materials are trending this season</p>
+                            </div>
+                        </div>
+                        
+                        <div class="trend-item">
+                            <div class="trend-icon">🎨</div>
+                            <div class="trend-content">
+                                <h6>Bold Colors</h6>
+                                <p>Vibrant hues are making a statement</p>
+                            </div>
+                        </div>
+                        
+                        <div class="trend-item">
+                            <div class="trend-icon">✨</div>
+                            <div class="trend-content">
+                                <h6>Minimalist Chic</h6>
+                                <p>Less is more with clean, simple lines</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Welcome Card */
+.welcome-card {
+    background: var(--gradient-primary);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: var(--bg-card);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid rgba(45, 212, 191, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-primary);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Card Headers */
+.card-header {
+    border-bottom: 1px solid rgba(45, 212, 191, 0.1);
+    padding: 1.5rem 1.5rem 1rem;
+    background: transparent;
+}
+
+.card-header h4 {
+    color: white;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Analysis Preview */
+.analysis-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.analysis-placeholder {
+    width: 100%;
+    height: 120px;
+    background: var(--gradient-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+}
+
+.analysis-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.tag {
+    background: rgba(45, 212, 191, 0.2);
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+}
+
+/* Quick Actions */
+.quick-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.quick-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: 15px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.quick-action-item:hover {
+    background: rgba(45, 212, 191, 0.2);
+    transform: translateY(-3px);
+    color: white;
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Style Insights */
+.insight-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.1);
+}
+
+.insight-item:last-child {
+    border-bottom: none;
+}
+
+.insight-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.insight-value {
+    color: white;
+    font-weight: 600;
+}
+
+/* Trends */
+.trend-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.1);
+}
+
+.trend-item:last-child {
+    border-bottom: none;
+}
+
+.trend-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.trend-content h6 {
+    color: white;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.trend-content p {
+    color: var(--text-light);
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state h5 {
+    color: white;
+    margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .welcome-title {
+        font-size: 2rem;
+    }
+    
+    .quick-actions {
+        margin-top: 1rem;
+    }
+    
+    .quick-action-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

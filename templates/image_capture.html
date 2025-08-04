@@ -3,76 +3,80 @@
 {% block title %}Photo Capture - Fashion Recommendation App{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="display-6 mb-4"><i class="fas fa-camera"></i> Photo Capture & Analysis</h1>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <!-- Webcam Capture -->
-        <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-video"></i> Live Camera Capture</h5>
-                </div>
-                <div class="card-body text-center">
-                    <div id="camera-container" class="mb-3">
-                        <video id="video" width="100%" height="300" autoplay style="border-radius: 8px; background: #f8f9fa;"></video>
-                        <canvas id="canvas" style="display: none;"></canvas>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="capture_type" class="form-label">Photo Type</label>
-                        <select class="form-select" id="capture_type">
-                            <option value="face">Face Photo (for face shape & skin tone analysis)</option>
-                            <option value="full_body">Full Body Photo (for body type analysis)</option>
-                            <option value="outfit">Outfit Photo (for style analysis)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-flex gap-2 justify-content-center">
-                        <button id="start-camera" class="btn btn-primary">
-                            <i class="fas fa-play"></i> Start Camera
-                        </button>
-                        <button id="capture-photo" class="btn btn-success" disabled>
-                            <i class="fas fa-camera"></i> Capture Photo
-                        </button>
-                        <button id="stop-camera" class="btn btn-danger" disabled>
-                            <i class="fas fa-stop"></i> Stop Camera
-                        </button>
-                    </div>
-                </div>
-            </div>
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto px-6">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">
+                <i class="fas fa-camera text-pink-500"></i> Photo Capture & Analysis
+            </h1>
+            <p class="text-gray-600">Capture photos for personalized fashion analysis and recommendations</p>
         </div>
 
-        <!-- File Upload -->
-        <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-upload"></i> Upload Photo</h5>
-                </div>
-                <div class="card-body">
-                    <form id="upload-form" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="file-input" class="form-label">Select Photo</label>
-                            <input type="file" class="form-control" id="file-input" name="file" accept="image/*" required>
-                            <div class="form-text">Supported formats: JPG, PNG, GIF (Max 16MB)</div>
+        <div class="max-w-6xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Webcam Capture -->
+                <div class="card-3d bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-video text-pink-500 text-xl mr-3"></i>
+                        <h2 class="text-2xl font-bold text-gray-800">Live Camera Capture</h2>
+                    </div>
+
+                    <div class="text-center">
+                        <div id="camera-container" class="mb-6">
+                            <video id="video" width="100%" height="300" autoplay class="rounded-lg bg-gray-100 border-2 border-gray-200"></video>
+                            <canvas id="canvas" style="display: none;"></canvas>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="upload_type" class="form-label">Photo Type</label>
-                            <select class="form-select" id="upload_type" name="image_type">
+
+                        <div class="mb-6">
+                            <label for="capture_type" class="block text-sm font-medium text-gray-700 mb-2">Photo Type</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200" id="capture_type">
+                                <option value="face">Face Photo (for face shape & skin tone analysis)</option>
+                                <option value="full_body">Full Body Photo (for body type analysis)</option>
+                                <option value="outfit">Outfit Photo (for style analysis)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex gap-3 justify-center">
+                            <button id="start-camera" class="btn-3d bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">
+                                <i class="fas fa-play mr-2"></i> Start Camera
+                            </button>
+                            <button id="capture-photo" class="btn-3d bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200" disabled>
+                                <i class="fas fa-camera mr-2"></i> Capture Photo
+                            </button>
+                            <button id="stop-camera" class="btn-3d bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200" disabled>
+                                <i class="fas fa-stop mr-2"></i> Stop Camera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="card-3d bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-upload text-pink-500 text-xl mr-3"></i>
+                        <h2 class="text-2xl font-bold text-gray-800">Upload Photo</h2>
+                    </div>
+
+                    <form id="upload-form" enctype="multipart/form-data" class="space-y-6">
+                        <div>
+                            <label for="file-input" class="block text-sm font-medium text-gray-700 mb-2">Select Photo</label>
+                            <input type="file" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200" id="file-input" name="file" accept="image/*" required>
+                            <p class="text-sm text-gray-500 mt-2">Supported formats: JPG, PNG, GIF (Max 16MB)</p>
+                        </div>
+
+                        <div>
+                            <label for="upload_type" class="block text-sm font-medium text-gray-700 mb-2">Photo Type</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200" id="upload_type" name="image_type">
                                 <option value="face">Face Photo</option>
                                 <option value="full_body">Full Body Photo</option>
                                 <option value="outfit">Outfit Photo</option>
                             </select>
                         </div>
-                        
-                        <div class="mb-3">
-                            <div id="image-preview" class="text-center" style="display: none;">
-                                <img id="preview-img" src="" alt="Preview" class="img-fluid" style="max-height: 200px; border-radius: 8px;">
+
+                        <div>
+                            <div id="image-preview" class="text-center hidden">
+                                <img id="preview-img" src="" alt="Preview" class="max-h-48 mx-auto rounded-lg border-2 border-gray-200">
                             </div>
                         </div>
                         

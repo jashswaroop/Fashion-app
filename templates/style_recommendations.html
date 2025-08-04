@@ -3,122 +3,135 @@
 {% block title %}Personalized Style Recommendations - Fashion Recommendation App{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="display-6 mb-4"><i class="fas fa-magic"></i> Your Personalized Style Guide</h1>
-            <p class="lead text-muted mb-4">Based on your preferences, here are curated outfit recommendations with shopping links!</p>
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto px-6">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">
+                <i class="fas fa-magic text-pink-500"></i> Your Personalized Style Guide
+            </h1>
+            <p class="text-gray-600">Based on your preferences, here are curated outfit recommendations with shopping links!</p>
         </div>
-    </div>
 
-    {% if recommendations %}
-    <!-- Style Profile Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-white">
-                    <h4 class="card-title"><i class="fas fa-user-circle"></i> Your Style Profile</h4>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <strong>Lifestyle:</strong> {{ recommendations.style_profile.lifestyle_category|title }}
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Style Type:</strong> {{ recommendations.style_profile.style_personality|title }}
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Color Palette:</strong> {{ recommendations.style_profile.color_palette.type|title }}
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Budget Category:</strong> {{ recommendations.style_profile.budget_category|title }}
+        {% if recommendations %}
+        <!-- Style Profile Summary -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold mb-4">
+                            <i class="fas fa-user-circle mr-3"></i>Your Style Profile
+                        </h2>
+                        <div class="grid md:grid-cols-4 gap-4">
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Lifestyle</div>
+                                <div class="text-lg font-semibold">{{ recommendations.style_profile.lifestyle_category|title }}</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Style Type</div>
+                                <div class="text-lg font-semibold">{{ recommendations.style_profile.style_personality|title }}</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Color Palette</div>
+                                <div class="text-lg font-semibold">{{ recommendations.style_profile.color_palette.type|title }}</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Budget Category</div>
+                                <div class="text-lg font-semibold">{{ recommendations.style_profile.budget_category|title }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Outfit Recommendations -->
-    {% for category, outfits in recommendations.outfits.items() %}
-    {% if outfits %}
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-tshirt"></i> 
-                {{ category.replace('_', ' ')|title }} Recommendations
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-4">
-                {% for outfit in outfits %}
-                <div class="col-lg-6">
-                    <div class="card border-primary h-100">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 text-primary">{{ outfit.name }}</h6>
-                            <small class="text-muted">{{ outfit.formality|title }} • {{ outfit.occasion.replace('_', ' ')|title }}</small>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">{{ outfit.description }}</p>
+        <!-- Outfit Recommendations -->
+        <div class="max-w-6xl mx-auto space-y-8">
+            {% for category, outfits in recommendations.outfits.items() %}
+            {% if outfits %}
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-tshirt mr-3 text-2xl"></i>
+                        {{ category.replace('_', ' ')|title }} Recommendations
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        {% for outfit in outfits %}
+                        <div class="border border-blue-200 rounded-lg p-6 hover:bg-blue-50 transition-colors duration-200">
+                            <!-- Outfit Header -->
+                            <div class="mb-4">
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">{{ outfit.name }}</h4>
+                                <div class="flex gap-2">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{{ outfit.formality|title }}</span>
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">{{ outfit.occasion.replace('_', ' ')|title }}</span>
+                                </div>
+                            </div>
+
+                            <p class="text-gray-600 mb-4">{{ outfit.description }}</p>
 
                             <!-- Outfit Image -->
                             {% if outfit.image %}
-                            <div class="mb-3">
-                                <img src="{{ outfit.image }}" alt="{{ outfit.name }}" class="img-fluid rounded" style="max-height: 300px; width: 100%; object-fit: cover;">
+                            <div class="mb-4">
+                                <img src="{{ outfit.image }}" alt="{{ outfit.name }}" class="w-full h-64 object-cover rounded-lg border-2 border-gray-200">
                             </div>
                             {% endif %}
 
                             <!-- Individual Item Images -->
                             {% if outfit.item_images %}
-                            <div class="mb-3">
-                                <strong>Outfit Pieces:</strong>
-                                <div class="row g-2 mt-1">
+                            <div class="mb-4">
+                                <h5 class="font-semibold text-gray-800 mb-3">Outfit Pieces:</h5>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {% for item_name, item_image in outfit.item_images.items() %}
-                                    <div class="col-4 col-md-3">
-                                        <div class="text-center">
-                                            <img src="{{ item_image }}" alt="{{ item_name.replace('_', ' ')|title }}" class="img-fluid rounded mb-1" style="height: 80px; width: 100%; object-fit: cover;">
-                                            <small class="d-block text-muted">{{ item_name.replace('_', ' ')|title }}</small>
-                                        </div>
+                                    <div class="text-center">
+                                        <img src="{{ item_image }}" alt="{{ item_name.replace('_', ' ')|title }}" class="w-full h-20 object-cover rounded-lg border border-gray-200 mb-2">
+                                        <span class="text-xs text-gray-600">{{ item_name.replace('_', ' ')|title }}</span>
                                     </div>
                                     {% endfor %}
                                 </div>
                             </div>
                             {% else %}
-                            <div class="mb-3">
-                                <strong>Outfit Pieces:</strong>
-                                <div class="d-flex flex-wrap gap-1 mt-1">
+                            <div class="mb-4">
+                                <h5 class="font-semibold text-gray-800 mb-3">Outfit Pieces:</h5>
+                                <div class="flex flex-wrap gap-2">
                                     {% for item in outfit.items %}
-                                    <span class="badge bg-secondary">{{ item.replace('_', ' ')|title }}</span>
+                                    <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">{{ item.replace('_', ' ')|title }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
                             {% endif %}
-                            
+
                             <!-- Color Palette -->
-                            <div class="mb-3">
-                                <strong>Recommended Colors:</strong>
-                                <div class="d-flex flex-wrap gap-1 mt-1">
+                            <div class="mb-4">
+                                <h5 class="font-semibold text-gray-800 mb-3">Recommended Colors:</h5>
+                                <div class="flex flex-wrap gap-2">
                                     {% for color in outfit.colors %}
-                                    <span class="badge bg-info">{{ color.replace('_', ' ')|title }}</span>
+                                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">{{ color.replace('_', ' ')|title }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
-                            
+
                             <!-- Estimated Cost -->
-                            <div class="mb-3">
-                                <strong>Estimated Total Cost:</strong> 
-                                <span class="text-success fw-bold">${{ outfit.total_estimated_cost }}</span>
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-800">Estimated Total Cost:</span>
+                                    <span class="text-2xl font-bold text-green-600">${{ outfit.total_estimated_cost }}</span>
+                                </div>
                             </div>
-                            
+
                             <!-- Shopping Links -->
-                            <div class="mb-3">
-                                <strong>Shop This Look:</strong>
-                                <div class="mt-2">
+                            <!-- Shopping Links -->
+                            <div>
+                                <h5 class="font-semibold text-gray-800 mb-3">Shop This Look:</h5>
+                                <div class="space-y-3">
                                     {% set unique_stores = outfit.shopping_links|groupby('store') %}
                                     {% for store, links in unique_stores %}
-                                    <div class="mb-2">
-                                        <h6 class="text-primary mb-1">{{ store }}</h6>
-                                        <div class="d-flex flex-wrap gap-1">
+                                    <div>
+                                        <h6 class="font-medium text-blue-600 mb-2">{{ store }}</h6>
+                                        <div class="flex flex-wrap gap-2">
                                             {% for link in links %}
-                                            <a href="{{ link.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <a href="{{ link.url }}" target="_blank" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200">
                                                 {{ link.item }}
                                             </a>
                                             {% endfor %}
@@ -128,153 +141,147 @@
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </div>
-    {% endif %}
-    {% endfor %}
+            {% endif %}
+            {% endfor %}
 
-    <!-- Seasonal Recommendations -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="fas fa-leaf"></i> Seasonal Style Guide</h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-4">
-                {% for season, details in recommendations.seasonal_recommendations.items() %}
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-success h-100">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 text-success">{{ season|title }}</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-2">
-                                <strong>Key Colors:</strong>
-                                <div class="mt-1">
+            <!-- Seasonal Recommendations -->
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-leaf mr-3 text-2xl"></i>
+                        Seasonal Style Guide
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {% for season, details in recommendations.seasonal_recommendations.items() %}
+                        <div class="border border-green-200 rounded-lg p-4 hover:bg-green-50 transition-colors duration-200">
+                            <h4 class="text-lg font-bold text-gray-800 mb-3">{{ season|title }}</h4>
+
+                            <div class="mb-4">
+                                <h5 class="font-semibold text-gray-700 mb-2">Key Colors:</h5>
+                                <div class="flex flex-wrap gap-2">
                                     {% for color in details.colors %}
-                                    <span class="badge bg-success">{{ color.replace('_', ' ')|title }}</span>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">{{ color.replace('_', ' ')|title }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
-                            <div class="mb-2">
-                                <strong>Must-Have Items:</strong>
-                                <ul class="list-unstyled mt-1">
+
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-2">Must-Have Items:</h5>
+                                <ul class="space-y-1">
                                     {% for item in details.items %}
-                                    <li><small>• {{ item.replace('_', ' ')|title }}</small></li>
+                                    <li class="text-sm text-gray-600 flex items-center">
+                                        <i class="fas fa-check text-green-500 mr-2 text-xs"></i>
+                                        {{ item.replace('_', ' ')|title }}
+                                    </li>
                                     {% endfor %}
                                 </ul>
                             </div>
+
                             <div>
-                                <strong>Trending:</strong>
-                                <div class="mt-1">
+                                <h5 class="font-semibold text-gray-700 mb-2">Trending:</h5>
+                                <div class="flex flex-wrap gap-2">
                                     {% for trend in details.trends %}
-                                    <span class="badge bg-outline-success">{{ trend.replace('_', ' ')|title }}</span>
+                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">{{ trend.replace('_', ' ')|title }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </div>
 
-    <!-- Accessory Recommendations -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="fas fa-gem"></i> Accessory Recommendations</h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-4">
-                {% for category, items in recommendations.accessory_recommendations.items() %}
-                <div class="col-md-4">
-                    <div class="card border-warning h-100">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 text-warning">{{ category|title }}</h6>
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled">
+            <!-- Accessory Recommendations -->
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden mt-8">
+                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-gem mr-3 text-2xl"></i>
+                        Accessory Recommendations
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-3 gap-6">
+                        {% for category, items in recommendations.accessory_recommendations.items() %}
+                        <div class="border border-yellow-200 rounded-lg p-4 hover:bg-yellow-50 transition-colors duration-200">
+                            <h4 class="text-lg font-bold text-gray-800 mb-3">{{ category|title }}</h4>
+                            <ul class="space-y-2">
                                 {% for item in items %}
-                                <li class="mb-1">
-                                    <i class="fas fa-check text-warning me-2"></i>
+                                <li class="flex items-center text-gray-600">
+                                    <i class="fas fa-check text-yellow-500 mr-2"></i>
                                     {{ item.replace('_', ' ')|title }}
                                 </li>
                                 {% endfor %}
                             </ul>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </div>
 
-    <!-- Shopping Categories -->
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Recommended Shopping Categories</h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                {% for category, items in recommendations.shopping_categories.items() %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card border-info">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 text-info">{{ category.replace('_', ' ')|title }}</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex flex-wrap gap-1">
+            <!-- Shopping Categories -->
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden mt-8">
+                <div class="bg-gradient-to-r from-cyan-500 to-blue-500 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-shopping-cart mr-3 text-2xl"></i>
+                        Recommended Shopping Categories
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for category, items in recommendations.shopping_categories.items() %}
+                        <div class="border border-cyan-200 rounded-lg p-4 hover:bg-cyan-50 transition-colors duration-200">
+                            <h4 class="text-lg font-bold text-gray-800 mb-3">{{ category.replace('_', ' ')|title }}</h4>
+                            <div class="flex flex-wrap gap-2">
                                 {% for item in items %}
-                                <span class="badge bg-info">{{ item.replace('_', ' ')|title }}</span>
+                                <span class="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm">{{ item.replace('_', ' ')|title }}</span>
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="row mt-4">
-        <div class="col-12 text-center">
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <a href="{{ url_for('fashion_questionnaire') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-edit"></i> Retake Style Quiz
-                </a>
-                <a href="{{ url_for('recommendations') }}" class="btn btn-outline-success">
-                    <i class="fas fa-magic"></i> Face Shape Recommendations
-                </a>
-                <a href="{{ url_for('color_analysis') }}" class="btn btn-outline-info">
-                    <i class="fas fa-palette"></i> Color Analysis
-                </a>
-                <button class="btn btn-outline-warning" onclick="window.print()">
-                    <i class="fas fa-print"></i> Save/Print Guide
-                </button>
+            <!-- Action Buttons -->
+            <div class="max-w-6xl mx-auto mt-8 text-center">
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="{{ url_for('fashion_questionnaire') }}" class="btn-3d bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">
+                        <i class="fas fa-edit mr-2"></i> Retake Style Quiz
+                    </a>
+                    <a href="{{ url_for('recommendations') }}" class="btn-3d bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200">
+                        <i class="fas fa-magic mr-2"></i> Face Shape Recommendations
+                    </a>
+                    <a href="{{ url_for('color_analysis') }}" class="btn-3d bg-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors duration-200">
+                        <i class="fas fa-palette mr-2"></i> Color Analysis
+                    </a>
+                    <button class="btn-3d bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-200" onclick="window.print()">
+                        <i class="fas fa-print mr-2"></i> Save/Print Guide
+                    </button>
+                </div>
             </div>
-        </div>
-    </div>
 
-    {% else %}
-    <!-- No Recommendations Available -->
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-clipboard-list fa-5x text-muted mb-4"></i>
-                <h3 class="text-muted">No Style Recommendations Available</h3>
-                <p class="lead text-muted mb-4">Complete our fashion questionnaire to get personalized outfit recommendations with shopping links!</p>
-                <a href="{{ url_for('fashion_questionnaire') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-clipboard-list"></i> Take Style Quiz
+        {% else %}
+        <!-- No Recommendations Available -->
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center py-16">
+                <i class="fas fa-clipboard-list text-gray-400 text-6xl mb-6"></i>
+                <h2 class="text-3xl font-bold text-gray-600 mb-4">No Style Recommendations Available</h2>
+                <p class="text-gray-500 text-lg mb-8">Complete our fashion questionnaire to get personalized outfit recommendations with shopping links!</p>
+                <a href="{{ url_for('fashion_questionnaire') }}" class="btn-3d bg-pink-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-pink-600 transition-colors duration-200">
+                    <i class="fas fa-clipboard-list mr-2"></i> Take Style Quiz
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
+</div>
+{% endblock %}
 
     <!-- Style Tips -->
     <div class="row mt-4">

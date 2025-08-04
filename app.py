@@ -640,6 +640,10 @@ def from_json_filter(value):
 def index():
     return render_template('index.html')
 
+@app.route('/classic')
+def classic_index():
+    return render_template('index.html')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -692,6 +696,34 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Get user statistics
+    user_stats = {
+        'total_analyses': 5,
+        'color_analyses': 3,
+        'outfit_recommendations': 12,
+        'style_score': 87
+    }
+
+    # Get recent analysis (mock data for now)
+    recent_analysis = None
+
+    # Get style profile (mock data for now)
+    style_profile = {
+        'primary_style': 'Modern Classic',
+        'color_season': 'Autumn',
+        'body_type': 'Athletic',
+        'lifestyle': 'Professional'
+    }
+
+    return render_template('dashboard.html',
+                         user=current_user,
+                         user_stats=user_stats,
+                         recent_analysis=recent_analysis,
+                         style_profile=style_profile)
+
+@app.route('/classic-dashboard')
+@login_required
+def classic_dashboard():
     return render_template('dashboard.html', user=current_user)
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -712,10 +744,15 @@ def profile():
     
     return render_template('profile.html', user=current_user)
 
+@app.route('/capture_photo')
+@login_required
+def capture_photo():
+    return render_template('image_capture.html')
+
 @app.route('/image_capture')
 @login_required
 def image_capture():
-    return render_template('image_capture.html')
+    return redirect(url_for('capture_photo'))
 
 @app.route('/upload_image', methods=['POST'])
 @login_required

@@ -1,0 +1,380 @@
+{% extends "modern_base.html" %}
+
+{% block content %}
+<!-- Hero Section with Bold Typography -->
+<section class="hero-section position-relative">
+    <!-- Floating Background Elements -->
+    <div class="floating-element" style="width: 100px; height: 100px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+    <div class="floating-element" style="width: 60px; height: 60px; top: 20%; right: 15%; animation-delay: 2s;"></div>
+    <div class="floating-element" style="width: 80px; height: 80px; bottom: 30%; left: 20%; animation-delay: 4s;"></div>
+    
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="hero-title">STYLE HARD<br>WIN BIG</h1>
+                    <p class="hero-subtitle">Discover your perfect style with AI-powered fashion recommendations</p>
+                    
+                    <div class="hero-buttons d-flex gap-3 flex-wrap">
+                        <a href="{{ url_for('capture_photo') }}" class="btn-modern">
+                            <i class="fas fa-camera"></i>
+                            Start Style Journey
+                        </a>
+                        <a href="{{ url_for('fashion_questionnaire') }}" class="btn-modern btn-secondary">
+                            <i class="fas fa-clipboard-list"></i>
+                            Take Style Quiz
+                        </a>
+                    </div>
+
+                    <!-- Stats Section -->
+                    <div class="hero-stats mt-5">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">10K+</h3>
+                                    <p class="stat-label">Styles Analyzed</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">95%</h3>
+                                    <p class="stat-label">Accuracy Rate</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">24/7</h3>
+                                    <p class="stat-label">AI Assistant</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="hero-visual position-relative">
+                    <!-- Main Character Illustration -->
+                    <div class="character-card">
+                        <div class="character-image">
+                            <i class="fas fa-user-tie" style="font-size: 15rem; color: var(--primary-color); opacity: 0.8;"></i>
+                        </div>
+
+                        <!-- Feature Tags -->
+                        <div class="feature-tags">
+                            <div class="feature-tag">
+                                <i class="fas fa-palette"></i>
+                                <span>Color Analysis</span>
+                            </div>
+                            <div class="feature-tag">
+                                <i class="fas fa-tshirt"></i>
+                                <span>Style Match</span>
+                            </div>
+                            <div class="feature-tag special">
+                                <i class="fas fa-magic"></i>
+                                <span>AI Powered</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="section-title">Powerful Features</h2>
+                <p class="section-subtitle">Everything you need for the perfect style</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera-retro"></i>
+                    </div>
+                    <h4>AI Photo Analysis</h4>
+                    <p>Advanced computer vision analyzes your facial features, skin tone, and body type for personalized recommendations.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h4>Color Matching</h4>
+                    <p>Discover your perfect color palette based on your skin undertones and personal preferences.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h4>Style Recommendations</h4>
+                    <p>Get personalized outfit suggestions that match your lifestyle, body type, and fashion preferences.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <h4>Shopping Integration</h4>
+                    <p>Direct links to purchase recommended items from top fashion retailers worldwide.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4>Style Analytics</h4>
+                    <p>Track your style evolution and get insights into your fashion preferences over time.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="modern-card feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4>Mobile Optimized</h4>
+                    <p>Access your style recommendations anywhere with our fully responsive mobile experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="cta-card">
+                    <h2 class="cta-title">Ready to Transform Your Style?</h2>
+                    <p class="cta-subtitle">Join thousands of users who have discovered their perfect style with FashionAI</p>
+                    
+                    {% if not session.user_id %}
+                    <div class="cta-buttons">
+                        <a href="{{ url_for('register') }}" class="btn-modern me-3">
+                            <i class="fas fa-user-plus"></i>
+                            Get Started Free
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn-modern btn-secondary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="cta-buttons">
+                        <a href="{{ url_for('dashboard') }}" class="btn-modern">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Go to Dashboard
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Hero Section Styles */
+.hero-content {
+    z-index: 2;
+    position: relative;
+}
+
+.hero-stats .stat-item {
+    padding: 1rem;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Character Card */
+.character-card {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 30px;
+    padding: 3rem;
+    text-align: center;
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    overflow: hidden;
+}
+
+/* Feature Tags */
+.feature-tags {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.feature-tag {
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.feature-tag:hover {
+    background: rgba(45, 212, 191, 0.2);
+    transform: translateY(-2px);
+}
+
+.feature-tag.special {
+    background: var(--gradient-secondary);
+    border: none;
+    color: white;
+}
+
+.feature-tag i {
+    font-size: 1rem;
+}
+
+/* Features Section */
+.features-section {
+    background: rgba(30, 41, 59, 0.5);
+}
+
+.section-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    color: var(--text-light);
+    font-size: 1.2rem;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-primary);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.feature-card h4 {
+    color: white;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature-card p {
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* CTA Section */
+.cta-section {
+    background: var(--bg-card);
+}
+
+.cta-card {
+    background: var(--gradient-primary);
+    border-radius: 30px;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.cta-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.cta-subtitle {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 2rem;
+}
+
+.cta-buttons .btn-modern {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.cta-buttons .btn-modern:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .character-card {
+        margin-top: 3rem;
+        padding: 2rem;
+    }
+
+    .feature-tags {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .feature-tag {
+        width: 100%;
+        max-width: 200px;
+        justify-content: center;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .cta-title {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

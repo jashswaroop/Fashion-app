@@ -3,177 +3,219 @@
 {% block title %}My Photos - Fashion Recommendation App{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="display-6"><i class="fas fa-images"></i> My Photos</h1>
-                <a href="{{ url_for('image_capture') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New Photo
-                </a>
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto px-6">
+        <!-- Header Section -->
+        <div class="flex justify-between items-center mb-12">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-3">
+                    <i class="fas fa-images text-pink-500"></i> My Photos
+                </h1>
+                <p class="text-gray-600">Manage your uploaded photos and view analysis results</p>
             </div>
+            <a href="{{ url_for('capture_photo') }}" class="btn-3d bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-600 transition-colors duration-200">
+                <i class="fas fa-plus mr-2"></i> Add New Photo
+            </a>
         </div>
-    </div>
 
-    {% if images %}
-    <div class="row g-4">
-        {% for image in images %}
-        <div class="col-lg-4 col-md-6">
-            <div class="card h-100">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='uploads/' + image.filename) }}" 
-                         class="card-img-top" alt="User photo" style="height: 250px; object-fit: cover;">
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-primary">{{ image.image_type.replace('_', ' ').title() }}</span>
+        {% if images %}
+        <!-- Photo Grid -->
+        <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-12">
+            {% for image in images %}
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <!-- Image Section -->
+                <div class="relative">
+                    <img src="{{ url_for('static', filename='uploads/' + image.filename) }}"
+                         class="w-full h-64 object-cover" alt="User photo">
+                    <div class="absolute top-3 right-3">
+                        {% if image.image_type == 'face' %}
+                        <span class="bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-user mr-1"></i>Face
+                        </span>
+                        {% elif image.image_type == 'full_body' %}
+                        <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-male mr-1"></i>Body
+                        </span>
+                        {% elif image.image_type == 'outfit' %}
+                        <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-tshirt mr-1"></i>Outfit
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
-                
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="fas fa-calendar"></i> 
-                        {{ image.upload_date.strftime('%B %d, %Y at %I:%M %p') }}
-                    </h6>
-                    
+
+                <!-- Content Section -->
+                <div class="p-6">
+                    <!-- Upload Date -->
+                    <div class="flex items-center text-gray-600 mb-4">
+                        <i class="fas fa-calendar mr-2"></i>
+                        <span class="text-sm">{{ image.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+
+                    <!-- Analysis Status -->
                     {% if image.analysis_complete %}
-                    <div class="mb-3">
-                        <h6 class="text-success"><i class="fas fa-check-circle"></i> Analysis Complete</h6>
-                        
-                        {% if image.face_shape %}
-                        <div class="mb-2">
-                            <small class="text-muted">Face Shape:</small>
-                            <span class="fw-bold ms-1">{{ image.face_shape }}</span>
+                    <div class="mb-4">
+                        <div class="flex items-center text-green-600 mb-3">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span class="font-semibold">Analysis Complete</span>
                         </div>
-                        {% endif %}
-                        
-                        {% if image.skin_tone %}
-                        <div class="mb-2">
-                            <small class="text-muted">Skin Tone:</small>
-                            <span class="fw-bold ms-1">{{ image.skin_tone }}</span>
-                        </div>
-                        {% endif %}
-                        
-                        {% if image.body_type_detected %}
-                        <div class="mb-2">
-                            <small class="text-muted">Body Type:</small>
-                            <span class="fw-bold ms-1">{{ image.body_type_detected }}</span>
-                        </div>
-                        {% endif %}
-                        
-                        {% if image.dominant_colors %}
-                        <div class="mb-2">
-                            <small class="text-muted">Dominant Colors:</small>
-                            <div class="d-flex gap-1 mt-1">
-                                {% set colors = image.dominant_colors | from_json %}
-                                {% for color in colors[:5] %}
-                                <div style="width: 20px; height: 20px; background-color: {{ color }}; border-radius: 50%; border: 1px solid #ccc;" 
-                                     title="{{ color }}"></div>
-                                {% endfor %}
+
+                        <!-- Analysis Results -->
+                        <div class="space-y-2">
+                            {% if image.face_shape %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Face Shape:</span>
+                                <span class="font-semibold text-gray-800">{{ image.face_shape }}</span>
                             </div>
+                            {% endif %}
+
+                            {% if image.skin_tone %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Skin Tone:</span>
+                                <span class="font-semibold text-gray-800">{{ image.skin_tone }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if image.body_type_detected %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Body Type:</span>
+                                <span class="font-semibold text-gray-800">{{ image.body_type_detected }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if image.dominant_colors %}
+                            <div>
+                                <span class="text-gray-600 text-sm block mb-2">Dominant Colors:</span>
+                                <div class="flex gap-2">
+                                    {% set colors = image.dominant_colors | from_json %}
+                                    {% for color in colors[:5] %}
+                                    <div class="w-6 h-6 rounded-full border-2 border-gray-300"
+                                         style="background-color: {{ color }};"
+                                         title="{{ color }}"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
                     {% else %}
-                    <div class="mb-3">
-                        <h6 class="text-warning"><i class="fas fa-clock"></i> Analysis Pending</h6>
-                        <small class="text-muted">Your photo is being processed...</small>
+                    <div class="mb-4">
+                        <div class="flex items-center text-yellow-600 mb-2">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span class="font-semibold">Analysis Pending</span>
+                        </div>
+                        <p class="text-gray-500 text-sm">Your photo is being processed...</p>
                     </div>
                     {% endif %}
                 </div>
-                
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewImage('{{ image.filename }}', '{{ image.original_filename }}')">
-                            <i class="fas fa-eye"></i> View
+
+                <!-- Action Buttons -->
+                <div class="px-6 pb-6">
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors duration-200"
+                                onclick="viewImage('{{ image.filename }}', '{{ image.original_filename }}')">
+                            <i class="fas fa-eye mr-2"></i>View
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteImage({{ image.id }}, '{{ image.original_filename }}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200"
+                                onclick="deleteImage({{ image.id }}, '{{ image.original_filename }}')">
+                            <i class="fas fa-trash mr-2"></i>Delete
                         </button>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Statistics -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-chart-bar"></i> Photo Statistics</h5>
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <h4 class="text-primary">{{ images|length }}</h4>
-                            <small class="text-muted">Total Photos</small>
+
+        <!-- Statistics Section -->
+        <div class="max-w-6xl mx-auto">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-chart-bar mr-3 text-2xl"></i>
+                        Photo Statistics
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-4 gap-6 text-center">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-600 mb-2">{{ images|length }}</div>
+                            <div class="text-gray-600 font-medium">Total Photos</div>
+                            <i class="fas fa-images text-blue-400 text-2xl mt-2"></i>
                         </div>
-                        <div class="col-md-3">
-                            <h4 class="text-success">{{ images|selectattr('image_type', 'equalto', 'face')|list|length }}</h4>
-                            <small class="text-muted">Face Photos</small>
+                        <div class="bg-gradient-to-br from-pink-50 to-pink-100 p-6 rounded-lg">
+                            <div class="text-3xl font-bold text-pink-600 mb-2">{{ images|selectattr('image_type', 'equalto', 'face')|list|length }}</div>
+                            <div class="text-gray-600 font-medium">Face Photos</div>
+                            <i class="fas fa-user text-pink-400 text-2xl mt-2"></i>
                         </div>
-                        <div class="col-md-3">
-                            <h4 class="text-info">{{ images|selectattr('image_type', 'equalto', 'full_body')|list|length }}</h4>
-                            <small class="text-muted">Body Photos</small>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
+                            <div class="text-3xl font-bold text-green-600 mb-2">{{ images|selectattr('image_type', 'equalto', 'full_body')|list|length }}</div>
+                            <div class="text-gray-600 font-medium">Body Photos</div>
+                            <i class="fas fa-male text-green-400 text-2xl mt-2"></i>
                         </div>
-                        <div class="col-md-3">
-                            <h4 class="text-warning">{{ images|selectattr('image_type', 'equalto', 'outfit')|list|length }}</h4>
-                            <small class="text-muted">Outfit Photos</small>
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">{{ images|selectattr('image_type', 'equalto', 'outfit')|list|length }}</div>
+                            <div class="text-gray-600 font-medium">Outfit Photos</div>
+                            <i class="fas fa-tshirt text-purple-400 text-2xl mt-2"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    {% else %}
-    <!-- Empty State -->
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-camera fa-5x text-muted mb-4"></i>
-                <h3 class="text-muted">No Photos Yet</h3>
-                <p class="lead text-muted mb-4">Start by capturing or uploading your first photo to get personalized fashion recommendations.</p>
-                <a href="{{ url_for('image_capture') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-camera"></i> Take Your First Photo
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center py-16">
+                <i class="fas fa-camera text-gray-400 text-6xl mb-6"></i>
+                <h2 class="text-3xl font-bold text-gray-600 mb-4">No Photos Yet</h2>
+                <p class="text-gray-500 text-lg mb-8">Start by capturing or uploading your first photo to get personalized fashion recommendations.</p>
+                <a href="{{ url_for('capture_photo') }}" class="btn-3d bg-pink-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-pink-600 transition-colors duration-200">
+                    <i class="fas fa-camera mr-2"></i> Take Your First Photo
                 </a>
             </div>
         </div>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <!-- Image View Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalTitle">Photo View</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="Photo" class="img-fluid">
-            </div>
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-xl font-bold text-gray-800" id="imageModalTitle">Photo View</h3>
+            <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4 text-center">
+            <img id="modalImage" src="" alt="Photo" class="max-w-full max-h-96 mx-auto rounded-lg">
         </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete "<span id="deleteFileName"></span>"?</p>
-                <p class="text-danger"><small>This action cannot be undone.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Delete Photo</button>
-                </form>
-            </div>
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-xl font-bold text-gray-800">Confirm Delete</h3>
+            <button onclick="closeDeleteModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <p class="text-gray-700 mb-2">Are you sure you want to delete "<span id="deleteFileName" class="font-semibold"></span>"?</p>
+            <p class="text-red-600 text-sm">This action cannot be undone.</p>
+        </div>
+        <div class="flex gap-3 p-4 border-t">
+            <button onclick="closeDeleteModal()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-600 transition-colors duration-200">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" class="flex-1">
+                <button type="submit" class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200">
+                    Delete Photo
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -182,13 +224,34 @@
 function viewImage(filename, originalName) {
     document.getElementById('modalImage').src = "{{ url_for('static', filename='uploads/') }}" + filename;
     document.getElementById('imageModalTitle').textContent = originalName;
-    new bootstrap.Modal(document.getElementById('imageModal')).show();
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
 }
 
 function deleteImage(imageId, originalName) {
     document.getElementById('deleteFileName').textContent = originalName;
     document.getElementById('deleteForm').action = "{{ url_for('delete_image', image_id=0) }}".replace('0', imageId);
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    document.getElementById('deleteModal').classList.remove('hidden');
 }
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// Close modals when clicking outside
+document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
 </script>
 {% endblock %}

@@ -3,65 +3,67 @@
 {% block title %}Color Analysis - Fashion Recommendation App{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="display-6 mb-4"><i class="fas fa-paint-brush"></i> Personal Color Analysis</h1>
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto px-6">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">
+                <i class="fas fa-palette text-pink-500"></i> Personal Color Analysis
+            </h1>
+            <p class="text-gray-600">Discover your perfect color palette based on your skin tone and features</p>
         </div>
-    </div>
 
-    {% if face_analysis %}
-    <!-- Analysis Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-white">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h4 class="card-title"><i class="fas fa-palette"></i> Your Color Profile</h4>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <strong>Skin Tone:</strong> {{ face_analysis.skin_tone }}
-                                </div>
-                                <div class="col-md-4">
-                                    <strong>Seasonal Palette:</strong> {{ color_recommendations.seasonal_palette }}
-                                </div>
-                                <div class="col-md-4">
-                                    <strong>Analysis Date:</strong> {{ face_analysis.upload_date.strftime('%B %d, %Y') }}
-                                </div>
+        {% if face_analysis %}
+        <!-- Analysis Summary -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold mb-4">
+                            <i class="fas fa-palette mr-3"></i>Your Color Profile
+                        </h2>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Skin Tone</div>
+                                <div class="text-lg font-semibold">{{ face_analysis.skin_tone }}</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Seasonal Palette</div>
+                                <div class="text-lg font-semibold">{{ color_recommendations.seasonal_palette }}</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                                <div class="text-sm opacity-90">Analysis Date</div>
+                                <div class="text-lg font-semibold">{{ face_analysis.upload_date.strftime('%B %d, %Y') }}</div>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center">
-                            <i class="fas fa-check-circle fa-3x"></i>
-                            <p class="mb-0 mt-2">Color Analysis Complete</p>
-                        </div>
+                    </div>
+                    <div class="text-center ml-6">
+                        <i class="fas fa-check-circle text-6xl mb-2"></i>
+                        <p class="text-sm opacity-90">Color Analysis Complete</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Best Colors Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-star"></i> Your Best Colors</h5>
+        <!-- Best Colors Section -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-star mr-3 text-2xl"></i>
+                        Your Best Colors
+                    </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     {% if color_recommendations.best_colors %}
-                    <p class="text-muted mb-4">These colors will enhance your natural beauty and make you glow:</p>
-                    <div class="row g-4">
+                    <p class="text-gray-600 mb-6">These colors will enhance your natural beauty and make you glow:</p>
+                    <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-6">
                         {% for color in color_recommendations.best_colors %}
-                        <div class="col-lg-4 col-md-6">
-                            <div class="card border-success h-100">
-                                <div class="card-body text-center">
-                                    <div style="width: 80px; height: 80px; background-color: {{ color.hex }}; border-radius: 50%; margin: 0 auto 15px; border: 3px solid #28a745; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
-                                    <h6 class="card-title text-success">{{ color.name }}</h6>
-                                    <p class="card-text small">{{ color.description }}</p>
-                                    <span class="badge bg-success">{{ color.hex }}</span>
-                                </div>
-                            </div>
+                        <div class="border border-green-200 rounded-lg p-6 text-center hover:bg-green-50 transition-colors duration-200">
+                            <div class="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-green-500 shadow-lg" style="background-color: {{ color.hex }};"></div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-2">{{ color.name }}</h4>
+                            <p class="text-gray-600 text-sm mb-3">{{ color.description }}</p>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">{{ color.hex }}</span>
                         </div>
                         {% endfor %}
                     </div>
@@ -69,27 +71,26 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Neutral Colors -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-balance-scale"></i> Versatile Neutral Colors</h5>
+        <!-- Neutral Colors -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-balance-scale mr-3 text-2xl"></i>
+                        Versatile Neutral Colors
+                    </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     {% if color_recommendations.neutral_colors %}
-                    <p class="text-muted mb-4">These neutral colors work as perfect base colors for any outfit:</p>
-                    <div class="row g-3">
+                    <p class="text-gray-600 mb-6">These neutral colors work as perfect base colors for any outfit:</p>
+                    <div class="grid md:grid-cols-3 gap-4">
                         {% for color in color_recommendations.neutral_colors %}
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center p-3 border rounded">
-                                <div style="width: 50px; height: 50px; background-color: {{ color.hex }}; border-radius: 8px; margin-right: 15px; border: 2px solid #6c757d;"></div>
-                                <div>
-                                    <h6 class="mb-1">{{ color.name }}</h6>
-                                    <small class="text-muted">{{ color.description }}</small>
-                                </div>
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                            <div class="w-12 h-12 rounded-lg mr-4 border-2 border-gray-400" style="background-color: {{ color.hex }};"></div>
+                            <div>
+                                <h5 class="font-semibold text-gray-800">{{ color.name }}</h5>
+                                <p class="text-gray-600 text-sm">{{ color.description }}</p>
                             </div>
                         </div>
                         {% endfor %}
@@ -98,27 +99,26 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Colors to Avoid -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="fas fa-times-circle"></i> Colors to Avoid</h5>
+        <!-- Colors to Avoid -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-times-circle mr-3 text-2xl"></i>
+                        Colors to Avoid
+                    </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     {% if color_recommendations.avoid_colors %}
-                    <p class="text-muted mb-4">These colors may not be the most flattering for your skin tone:</p>
-                    <div class="row g-3">
+                    <p class="text-gray-600 mb-6">These colors may not be the most flattering for your skin tone:</p>
+                    <div class="grid md:grid-cols-2 gap-4">
                         {% for color in color_recommendations.avoid_colors %}
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3 border border-danger rounded">
-                                <div style="width: 40px; height: 40px; background-color: {{ color.hex }}; border-radius: 50%; margin-right: 15px; border: 2px solid #dc3545;"></div>
-                                <div>
-                                    <h6 class="mb-1 text-danger">{{ color.name }}</h6>
-                                    <small class="text-muted">{{ color.reason }}</small>
-                                </div>
+                        <div class="flex items-center p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200">
+                            <div class="w-10 h-10 rounded-full mr-4 border-2 border-red-500" style="background-color: {{ color.hex }};"></div>
+                            <div>
+                                <h5 class="font-semibold text-red-600">{{ color.name }}</h5>
+                                <p class="text-gray-600 text-sm">{{ color.reason }}</p>
                             </div>
                         </div>
                         {% endfor %}
@@ -127,27 +127,26 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Makeup Color Recommendations -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-makeup"></i> Makeup Color Recommendations</h5>
+        <!-- Makeup Color Recommendations -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-makeup mr-3 text-2xl"></i>
+                        Makeup Color Recommendations
+                    </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     {% if color_recommendations.makeup_colors %}
-                    <div class="row g-4">
+                    <div class="grid md:grid-cols-3 gap-6">
                         {% for category, colors in color_recommendations.makeup_colors.items() %}
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <h6 class="text-info text-capitalize">{{ category }}</h6>
-                                <div class="d-flex flex-wrap justify-content-center gap-2">
-                                    {% for color in colors %}
-                                    <span class="badge bg-info">{{ color }}</span>
-                                    {% endfor %}
-                                </div>
+                        <div class="text-center">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 capitalize">{{ category }}</h4>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                {% for color in colors %}
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ color }}</span>
+                                {% endfor %}
                             </div>
                         </div>
                         {% endfor %}
@@ -156,115 +155,130 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Seasonal Palette Information -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="fas fa-leaf"></i> Your Seasonal Color Palette: {{ color_recommendations.seasonal_palette }}</h5>
+        <!-- Seasonal Palette Information -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-leaf mr-3 text-2xl"></i>
+                        Your Seasonal Color Palette: {{ color_recommendations.seasonal_palette }}
+                    </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     {% if color_recommendations.seasonal_palette == 'Summer' %}
-                    <p><strong>Summer Palette:</strong> You have cool undertones with soft, muted colors that complement your delicate coloring. Think of soft pastels and cool tones.</p>
-                    <ul>
-                        <li>Soft, muted colors work best</li>
-                        <li>Cool undertones are most flattering</li>
-                        <li>Avoid bright, warm colors</li>
-                        <li>Pastels and soft jewel tones are perfect</li>
-                    </ul>
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">Summer Palette</h4>
+                        <p class="text-gray-700 mb-4">You have cool undertones with soft, muted colors that complement your delicate coloring. Think of soft pastels and cool tones.</p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center"><i class="fas fa-check text-blue-500 mr-2"></i>Soft, muted colors work best</li>
+                            <li class="flex items-center"><i class="fas fa-check text-blue-500 mr-2"></i>Cool undertones are most flattering</li>
+                            <li class="flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>Avoid bright, warm colors</li>
+                            <li class="flex items-center"><i class="fas fa-check text-blue-500 mr-2"></i>Pastels and soft jewel tones are perfect</li>
+                        </ul>
+                    </div>
                     {% elif color_recommendations.seasonal_palette == 'Autumn' %}
-                    <p><strong>Autumn Palette:</strong> You have warm undertones and look best in rich, earthy colors. Think of fall foliage and warm spices.</p>
-                    <ul>
-                        <li>Warm, rich colors enhance your natural beauty</li>
-                        <li>Earth tones are your best friend</li>
-                        <li>Avoid cool, icy colors</li>
-                        <li>Deep oranges, browns, and golds are perfect</li>
-                    </ul>
+                    <div class="bg-orange-50 p-6 rounded-lg">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">Autumn Palette</h4>
+                        <p class="text-gray-700 mb-4">You have warm undertones and look best in rich, earthy colors. Think of fall foliage and warm spices.</p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>Warm, rich colors enhance your natural beauty</li>
+                            <li class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>Earth tones are your best friend</li>
+                            <li class="flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>Avoid cool, icy colors</li>
+                            <li class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>Deep oranges, browns, and golds are perfect</li>
+                        </ul>
+                    </div>
                     {% elif color_recommendations.seasonal_palette == 'Winter' %}
-                    <p><strong>Winter Palette:</strong> You have cool undertones and can handle bold, dramatic colors. Think of crisp winter days and jewel tones.</p>
-                    <ul>
-                        <li>Bold, clear colors look stunning on you</li>
-                        <li>High contrast combinations work well</li>
-                        <li>Avoid muted, dusty colors</li>
-                        <li>Jewel tones and pure colors are ideal</li>
-                    </ul>
+                    <div class="bg-purple-50 p-6 rounded-lg">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">Winter Palette</h4>
+                        <p class="text-gray-700 mb-4">You have cool undertones and can handle bold, dramatic colors. Think of crisp winter days and jewel tones.</p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center"><i class="fas fa-check text-purple-500 mr-2"></i>Bold, clear colors look stunning on you</li>
+                            <li class="flex items-center"><i class="fas fa-check text-purple-500 mr-2"></i>High contrast combinations work well</li>
+                            <li class="flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>Avoid muted, dusty colors</li>
+                            <li class="flex items-center"><i class="fas fa-check text-purple-500 mr-2"></i>Jewel tones and pure colors are ideal</li>
+                        </ul>
+                    </div>
                     {% else %}
-                    <p>Your seasonal palette will be determined based on your skin tone analysis.</p>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <p class="text-gray-700">Your seasonal palette will be determined based on your skin tone analysis.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
 
-    {% else %}
-    <!-- No Analysis Available -->
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-palette fa-5x text-muted mb-4"></i>
-                <h3 class="text-muted">No Color Analysis Available</h3>
-                <p class="lead text-muted mb-4">To get your personal color analysis, please upload a face photo.</p>
-                <a href="{{ url_for('image_capture') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-camera"></i> Upload Face Photo
+        {% else %}
+        <!-- No Analysis Available -->
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center py-16">
+                <i class="fas fa-palette text-gray-400 text-6xl mb-6"></i>
+                <h2 class="text-3xl font-bold text-gray-600 mb-4">No Color Analysis Available</h2>
+                <p class="text-gray-500 text-lg mb-8">To get your personal color analysis, please upload a face photo.</p>
+                <a href="{{ url_for('capture_photo') }}" class="btn-3d bg-pink-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-pink-600 transition-colors duration-200">
+                    <i class="fas fa-camera mr-2"></i> Upload Face Photo
                 </a>
             </div>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- Color Theory Tips -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card bg-light">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Color Styling Tips</h5>
+        <!-- Color Theory Tips -->
+        <div class="max-w-6xl mx-auto mt-8">
+            <div class="card-3d bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-lightbulb mr-3 text-2xl"></i>
+                        Color Styling Tips
+                    </h3>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-eye text-primary"></i> Color Harmony</h6>
-                            <ul class="small">
-                                <li>Use the 60-30-10 rule for color distribution</li>
-                                <li>Pair complementary colors for contrast</li>
-                                <li>Use analogous colors for harmony</li>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-eye text-blue-500 mr-2"></i>Color Harmony
+                            </h4>
+                            <ul class="space-y-2 text-gray-600">
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Use the 60-30-10 rule for color distribution</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Pair complementary colors for contrast</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Use analogous colors for harmony</li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-sun text-warning"></i> Seasonal Dressing</h6>
-                            <ul class="small">
-                                <li>Lighter colors for spring/summer</li>
-                                <li>Deeper colors for fall/winter</li>
-                                <li>Consider the occasion and setting</li>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-sun text-yellow-500 mr-2"></i>Seasonal Dressing
+                            </h4>
+                            <ul class="space-y-2 text-gray-600">
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Lighter colors for spring/summer</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Deeper colors for fall/winter</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Consider the occasion and setting</li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-heart text-danger"></i> Personal Style</h6>
-                            <ul class="small">
-                                <li>Choose colors that make you feel confident</li>
-                                <li>Consider your lifestyle and preferences</li>
-                                <li>Experiment with different shades</li>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-heart text-red-500 mr-2"></i>Personal Style
+                            </h4>
+                            <ul class="space-y-2 text-gray-600">
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Choose colors that make you feel confident</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Consider your lifestyle and preferences</li>
+                                <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i>Experiment with different shades</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="row mt-4">
-        <div class="col-12 text-center">
-            <div class="d-flex gap-3 justify-content-center">
-                <a href="{{ url_for('image_capture') }}" class="btn btn-primary">
-                    <i class="fas fa-camera"></i> Upload New Photo
+        <!-- Action Buttons -->
+        <div class="max-w-6xl mx-auto mt-8 text-center">
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="{{ url_for('capture_photo') }}" class="btn-3d bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">
+                    <i class="fas fa-camera mr-2"></i> Upload New Photo
                 </a>
-                <a href="{{ url_for('recommendations') }}" class="btn btn-success">
-                    <i class="fas fa-magic"></i> View All Recommendations
+                <a href="{{ url_for('recommendations') }}" class="btn-3d bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200">
+                    <i class="fas fa-magic mr-2"></i> View All Recommendations
                 </a>
-                <a href="{{ url_for('my_images') }}" class="btn btn-secondary">
-                    <i class="fas fa-images"></i> My Photos
+                <a href="{{ url_for('my_images') }}" class="btn-3d bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors duration-200">
+                    <i class="fas fa-images mr-2"></i> My Photos
                 </a>
             </div>
         </div>
