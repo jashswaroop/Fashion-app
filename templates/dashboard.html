@@ -3,201 +3,112 @@
 {% block title %}Dashboard - Fashion Recommendation App{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="display-6">Welcome back, {{ user.username }}!</h1>
-                <div class="text-muted">
-                    <i class="fas fa-calendar"></i> {{ moment().format('MMMM Do, YYYY') if moment else 'Today' }}
+<div class="container mx-auto py-8 px-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Welcome back, {{ user.username }}!</h1>
+        <div class="text-gray-500">
+            <i class="fas fa-calendar-alt"></i> {{ moment().format('MMMM Do, YYYY') if moment else 'Today' }}
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="card-3d bg-gradient-to-r from-pink-500 to-purple-500 text-white p-6 rounded-lg shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h6 class="text-lg font-semibold">Profile Completion</h6>
+                    <h3 class="text-4xl font-bold">
+                        {% if user.age and user.gender and user.style_preference %}85%{% elif user.age or user.gender or user.style_preference %}45%{% else %}15%{% endif %}
+                    </h3>
                 </div>
+                <i class="fas fa-user-circle fa-3x opacity-75"></i>
+            </div>
+        </div>
+        <div class="card-3d bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h6 class="text-lg font-semibold">Recommendations</h6>
+                    <h3 class="text-4xl font-bold">0</h3>
+                </div>
+                <i class="fas fa-magic fa-3x opacity-75"></i>
+            </div>
+        </div>
+        <div class="card-3d bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-lg shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h6 class="text-lg font-semibold">Photos Analyzed</h6>
+                    <h3 class="text-4xl font-bold">0</h3>
+                </div>
+                <i class="fas fa-camera fa-3x opacity-75"></i>
+            </div>
+        </div>
+        <div class="card-3d bg-gradient-to-r from-red-500 to-pink-500 text-white p-6 rounded-lg shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h6 class="text-lg font-semibold">Saved Items</h6>
+                    <h3 class="text-4xl font-bold">0</h3>
+                </div>
+                <i class="fas fa-heart fa-3x opacity-75"></i>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Profile Completion</h6>
-                            <h3 class="mb-0">
-                                {% if user.age and user.gender and user.style_preference %}
-                                    85%
-                                {% elif user.age or user.gender or user.style_preference %}
-                                    45%
-                                {% else %}
-                                    15%
-                                {% endif %}
-                            </h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-user-circle fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Quick Actions -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-bold mb-4"><i class="fas fa-rocket"></i> Quick Actions</h5>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <a href="{{ url_for('profile') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-user-edit fa-2x text-pink-500 mb-2"></i>
+                    <p class="font-semibold">Complete Profile</p>
+                </a>
+                <a href="{{ url_for('image_capture') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-camera fa-2x text-green-500 mb-2"></i>
+                    <p class="font-semibold">Capture Photo</p>
+                </a>
+                <a href="{{ url_for('recommendations') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-magic fa-2x text-blue-500 mb-2"></i>
+                    <p class="font-semibold">Get Recommendations</p>
+                </a>
+                <a href="{{ url_for('color_analysis') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-palette fa-2x text-yellow-500 mb-2"></i>
+                    <p class="font-semibold">Color Analysis</p>
+                </a>
+                <a href="{{ url_for('my_images') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-images fa-2x text-purple-500 mb-2"></i>
+                    <p class="font-semibold">My Photos</p>
+                </a>
+                 <a href="{{ url_for('style_recommendations') }}" class="card-3d text-center p-4 bg-gray-100 rounded-lg">
+                    <i class="fas fa-book-open fa-2x text-gray-500 mb-2"></i>
+                    <p class="font-semibold">Style Guide</p>
+                </a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Recommendations</h6>
-                            <h3 class="mb-0">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-magic fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Profile Summary -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-bold mb-4"><i class="fas fa-user"></i> Profile Summary</h5>
+            <div class="space-y-3">
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Age:</strong> {{ user.age or 'Not set' }}</p>
+                <p><strong>Gender:</strong> {{ user.gender or 'Not set' }}</p>
+                <p><strong>Style Preference:</strong> {{ user.style_preference or 'Not set' }}</p>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Photos Analyzed</h6>
-                            <h3 class="mb-0">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-camera fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Saved Items</h6>
-                            <h3 class="mb-0">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-heart fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-lg">
-                                    <i class="fas fa-user-edit"></i><br>
-                                    <small>Complete Profile</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('image_capture') }}" class="btn btn-outline-success btn-lg">
-                                    <i class="fas fa-camera"></i><br>
-                                    <small>Capture Photo</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('recommendations') }}" class="btn btn-outline-info btn-lg">
-                                    <i class="fas fa-magic"></i><br>
-                                    <small>Get Recommendations</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('color_analysis') }}" class="btn btn-outline-warning btn-lg">
-                                    <i class="fas fa-palette"></i><br>
-                                    <small>Color Analysis</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('my_images') }}" class="btn btn-outline-secondary btn-lg">
-                                    <i class="fas fa-images"></i><br>
-                                    <small>My Photos</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('fashion_questionnaire') }}" class="btn btn-outline-purple btn-lg" style="border-color: #6f42c1; color: #6f42c1;">
-                                    <i class="fas fa-clipboard-list"></i><br>
-                                    <small>Style Quiz</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('style_recommendations') }}" class="btn btn-outline-dark btn-lg">
-                                    <i class="fas fa-magic"></i><br>
-                                    <small>Style Guide</small>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-user"></i> Profile Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Username:</strong> {{ user.username }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Email:</strong> {{ user.email }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Age:</strong> {{ user.age or 'Not set' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Gender:</strong> {{ user.gender or 'Not set' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Style Preference:</strong> {{ user.style_preference or 'Not set' }}
-                    </div>
-                    <div class="text-center">
-                        <a href="{{ url_for('profile') }}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
+            <div class="text-center mt-6">
+                <a href="{{ url_for('profile') }}" class="btn-3d bg-pink-500 text-white px-6 py-2 rounded-full">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
             </div>
         </div>
     </div>
 
     {% if not user.age or not user.gender or not user.style_preference %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="alert alert-info">
-                <h5><i class="fas fa-info-circle"></i> Complete Your Profile</h5>
-                <p class="mb-2">To get the best personalized recommendations, please complete your profile with your preferences and measurements.</p>
-                <a href="{{ url_for('profile') }}" class="btn btn-primary">Complete Profile Now</a>
-            </div>
-        </div>
+    <div class="mt-8 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg shadow-lg" role="alert">
+        <h5 class="font-bold"><i class="fas fa-info-circle"></i> Complete Your Profile</h5>
+        <p>To get the best personalized recommendations, please complete your profile with your preferences and measurements.</p>
+        <a href="{{ url_for('profile') }}" class="btn-3d inline-block mt-2 bg-blue-500 text-white px-4 py-2 rounded-full">Complete Profile Now</a>
     </div>
     {% endif %}
 </div>

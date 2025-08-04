@@ -4,109 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Fashion Recommendation App{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .navbar-brand {
-            font-weight: bold;
-            color: #e91e63 !important;
+        body {
+            font-family: 'Poppins', sans-serif;
         }
-        .btn-primary {
-            background-color: #e91e63;
-            border-color: #e91e63;
+        .btn-3d {
+            transition: all 0.15s ease-out;
+            box-shadow: 0 4px 0 #e53e3e;
         }
-        .btn-primary:hover {
-            background-color: #c2185b;
-            border-color: #c2185b;
+        .btn-3d:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #c53030;
         }
-        .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
+        .btn-3d:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #c53030;
         }
-        .hero-section {
-            background: linear-gradient(135deg, #e91e63, #f06292);
-            color: white;
-            padding: 80px 0;
+        .card-3d {
+            transition: all 0.2s ease-out;
         }
-        .feature-card {
-            transition: transform 0.3s;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
+        .card-3d:hover {
+            transform: translateY(-5px) perspective(1000px) rotateX(2deg) rotateY(-2deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-tshirt"></i> FashionAI
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-                    </li>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <a class="text-2xl font-bold text-gray-800" href="{{ url_for('index') }}">
+                    <i class="fas fa-tshirt text-pink-500"></i> FashionAI
+                </a>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('index') }}">Home</a>
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('image_capture') }}">Photo Capture</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('my_images') }}">My Photos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('recommendations') }}">Recommendations</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('color_analysis') }}">Color Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('style_recommendations') }}">Style Guide</a>
-                    </li>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('profile') }}">Profile</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('image_capture') }}">Photo Capture</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('my_images') }}">My Photos</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('recommendations') }}">Recommendations</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('color_analysis') }}">Color Analysis</a>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('style_recommendations') }}">Style Guide</a>
                     {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ current_user.username }}
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-                        </ul>
-                    </li>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                     {% if current_user.is_authenticated %}
+                        <div class="relative">
+                            <button class="flex items-center text-gray-600 focus:outline-none">
+                                <i class="fas fa-user"></i>
+                                <span class="ml-2">{{ current_user.username }}</span>
+                                <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden">
+                                <a href="{{ url_for('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-500 hover:text-white">Profile</a>
+                                <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-500 hover:text-white">Logout</a>
+                            </div>
+                        </div>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                    </li>
+                        <a class="text-gray-600 hover:text-pink-500" href="{{ url_for('login') }}">Login</a>
+                        <a class="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600" href="{{ url_for('register') }}">Register</a>
                     {% endif %}
-                </ul>
+                </div>
+                 <div class="md:hidden flex items-center">
+                    <button class="outline-none mobile-menu-button">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                </div>
             </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="hidden mobile-menu">
+             <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('index') }}">Home</a>
+             {% if current_user.is_authenticated %}
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('profile') }}">Profile</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('image_capture') }}">Photo Capture</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('my_images') }}">My Photos</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('recommendations') }}">Recommendations</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('color_analysis') }}">Color Analysis</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('style_recommendations') }}">Style Guide</a>
+                 <a href="{{ url_for('profile') }}" class="block py-2 px-4 text-sm text-gray-700 hover:bg-pink-500 hover:text-white">Profile</a>
+                <a href="{{ url_for('logout') }}" class="block py-2 px-4 text-sm text-gray-700 hover:bg-pink-500 hover:text-white">Logout</a>
+            {% else %}
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('login') }}">Login</a>
+                <a class="block py-2 px-4 text-sm text-gray-600 hover:bg-pink-500 hover:text-white" href="{{ url_for('register') }}">Register</a>
+            {% endif %}
         </div>
     </nav>
 
     <main>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <div class="container mt-3">
+                <div class="container mx-auto mt-3 px-6">
                     {% for message in messages %}
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
                         </div>
                     {% endfor %}
                 </div>
@@ -116,20 +114,26 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>FashionAI</h5>
+    <footer class="bg-gray-800 text-white py-8 mt-10">
+        <div class="container mx-auto px-6">
+            <div class="md:flex justify-between">
+                <div class="mb-6 md:mb-0">
+                    <h5 class="text-xl font-bold mb-2">FashionAI</h5>
                     <p>Personalized fashion recommendations powered by AI</p>
                 </div>
-                <div class="col-md-6 text-md-end">
+                <div class="text-sm">
                     <p>&copy; 2024 FashionAI. All rights reserved.</p>
                 </div>
             </div>
         </div>
     </footer>
+    <script>
+        const btn = document.querySelector('button.mobile-menu-button');
+        const menu = document.querySelector('.mobile-menu');
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
 </body>
 </html>
