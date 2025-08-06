@@ -637,6 +637,10 @@ def from_json_filter(value):
 
 # Routes
 @app.route('/')
+def portfolio():
+    return render_template('portfolio.html')
+
+@app.route('/classic_home')
 def index():
     return render_template('index.html')
 
