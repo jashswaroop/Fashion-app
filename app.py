@@ -661,7 +661,7 @@ def register():
             return render_template('register.html')
         
         # Create new user
-        user = User(username=username, email=email)
+        user = User(username=username, email=email, style_analysis_complete=False)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -961,6 +961,8 @@ def submit_fashion_preferences():
 
         # Collect all form data
         preferences = {
+            'gender': request.form.get('gender'),
+            'age_range': request.form.get('age_range'),
             'lifestyle': request.form.get('lifestyle'),
             'work_environment': request.form.get('work_environment'),
             'social_activities': request.form.getlist('social_activities'),
@@ -986,7 +988,7 @@ def submit_fashion_preferences():
         print(f"Collected preferences: {preferences}")
 
         # Validate required fields
-        required_fields = ['lifestyle', 'work_environment', 'clothing_fit', 'budget_per_item', 'fashion_risk']
+        required_fields = ['gender', 'lifestyle', 'work_environment', 'clothing_fit', 'budget_per_item', 'fashion_risk']
         missing_fields = [field for field in required_fields if not preferences.get(field)]
 
         if missing_fields:
@@ -994,21 +996,40 @@ def submit_fashion_preferences():
             return redirect(url_for('fashion_questionnaire'))
 
         # Store preferences in user profile
-        current_user.fashion_preferences = json.dumps(preferences)
-        current_user.style_analysis_complete = True
-        db.session.commit()
-        print("Preferences saved to database successfully")
-
-        # Test analysis generation
         try:
-            analysis_results = analyze_fashion_preferences(preferences, current_user)
-            print(f"Analysis results generated: {analysis_results}")
-        except Exception as analysis_error:
-            print(f"Error in analysis generation: {analysis_error}")
-            # Continue anyway, analysis will be done on recommendations page
+            current_user.fashion_preferences = json.dumps(preferences)
+            current_user.style_analysis_complete = True
 
-        flash('Style preferences saved successfully! Generating your personalized recommendations...', 'success')
-        return redirect(url_for('style_recommendations'))
+            # Also update user's profile with gender information
+            if preferences.get('gender'):
+                current_user.gender = preferences['gender'].title()  # Convert to title case for consistency
+
+            db.session.commit()
+            print("Preferences saved to database successfully")
+            print(f"User {current_user.username} - style_analysis_complete: {current_user.style_analysis_complete}")
+            print(f"Fashion preferences length: {len(current_user.fashion_preferences) if current_user.fashion_preferences else 0}")
+
+            # Test analysis generation
+            try:
+                analysis_results = analyze_fashion_preferences(preferences, current_user)
+                print(f"Analysis results generated: {analysis_results}")
+            except Exception as analysis_error:
+                print(f"Error in analysis generation: {analysis_error}")
+                import traceback
+                traceback.print_exc()
+                # Continue anyway, analysis will be done on recommendations page
+
+            flash('Style preferences saved successfully! Generating your personalized recommendations...', 'success')
+            print("Redirecting to force_recommendations...")
+            return redirect(url_for('force_recommendations'))
+
+        except Exception as save_error:
+            print(f"Error saving preferences to database: {save_error}")
+            import traceback
+            traceback.print_exc()
+            db.session.rollback()
+            flash('Error saving preferences. Please try again.', 'error')
+            return redirect(url_for('fashion_questionnaire'))
 
     except Exception as e:
         print(f"Error processing fashion preferences: {e}")
@@ -1017,21 +1038,86 @@ def submit_fashion_preferences():
         flash('Error processing preferences. Please try again.', 'error')
         return redirect(url_for('fashion_questionnaire'))
 
+@app.route('/debug_user')
+@login_required
+def debug_user():
+    """Debug endpoint to check current user state"""
+    try:
+        db.session.refresh(current_user)
+        user_info = {
+            'id': current_user.id,
+            'username': current_user.username,
+            'gender': current_user.gender,
+            'style_analysis_complete': current_user.style_analysis_complete,
+            'fashion_preferences_length': len(current_user.fashion_preferences) if current_user.fashion_preferences else 0,
+            'fashion_preferences_preview': current_user.fashion_preferences[:100] if current_user.fashion_preferences else None
+        }
+        return jsonify(user_info)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/force_recommendations')
+@login_required
+def force_recommendations():
+    """Force generate recommendations for current user - bypass all checks"""
+    try:
+        db.session.refresh(current_user)
+
+        if not current_user.fashion_preferences:
+            return jsonify({'error': 'No fashion preferences found'})
+
+        preferences = json.loads(current_user.fashion_preferences)
+        recommendations = generate_style_recommendations_with_links(preferences, current_user)
+
+        if recommendations and recommendations.get('outfits'):
+            return render_template('style_recommendations.html',
+                                 recommendations=recommendations,
+                                 preferences=preferences,
+                                 user=current_user)
+        else:
+            return jsonify({'error': 'No recommendations generated'})
+
+    except Exception as e:
+        import traceback
+        error_details = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        return jsonify(error_details)
+
 @app.route('/style_recommendations')
 @app.route('/style_recommendations/<analysis_id>')
 @login_required
 def style_recommendations(analysis_id=None):
     """Display personalized style recommendations with shopping links"""
     try:
+        print(f"=== STYLE RECOMMENDATIONS REQUEST ===")
+        print(f"User: {current_user.username}")
+
+        # Refresh user data from database to ensure we have latest state
+        db.session.refresh(current_user)
+
+        print(f"Style analysis complete: {current_user.style_analysis_complete}")
+        print(f"Fashion preferences exist: {bool(current_user.fashion_preferences)}")
+
         # Check if user has completed the style analysis
-        if not current_user.style_analysis_complete or not current_user.fashion_preferences:
+        if not current_user.style_analysis_complete:
+            print(f"User {current_user.username} - style_analysis_complete is False")
+            flash('Complete our Style Quiz to get personalized outfit recommendations with shopping links!', 'info')
+            return redirect(url_for('fashion_questionnaire'))
+
+        if not current_user.fashion_preferences:
+            print(f"User {current_user.username} - fashion_preferences is empty")
             flash('Complete our Style Quiz to get personalized outfit recommendations with shopping links!', 'info')
             return redirect(url_for('fashion_questionnaire'))
 
         # Get user preferences
         try:
             preferences = json.loads(current_user.fashion_preferences)
-        except (json.JSONDecodeError, TypeError):
+            print(f"Loaded preferences: {list(preferences.keys())}")
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error loading preferences: {e}")
             flash('There was an issue with your saved preferences. Please retake the Style Quiz.', 'warning')
             return redirect(url_for('fashion_questionnaire'))
 
@@ -1040,6 +1126,14 @@ def style_recommendations(analysis_id=None):
         try:
             recommendations = generate_style_recommendations_with_links(preferences, current_user)
             print(f"Generated recommendations with {len(recommendations.get('outfits', {}))} outfit categories")
+
+            # Debug: Print recommendation structure
+            if recommendations:
+                print(f"Recommendation keys: {list(recommendations.keys())}")
+                if 'outfits' in recommendations:
+                    for category, outfits in recommendations['outfits'].items():
+                        print(f"  {category}: {len(outfits)} outfits")
+
         except Exception as rec_error:
             print(f"Error in recommendation generation: {rec_error}")
             import traceback
@@ -1049,9 +1143,11 @@ def style_recommendations(analysis_id=None):
 
         # Check if recommendations were generated successfully
         if not recommendations or not recommendations.get('outfits'):
+            print("No recommendations generated or empty outfits")
             flash('Unable to generate recommendations. Please retake the Style Quiz.', 'warning')
             return redirect(url_for('fashion_questionnaire'))
 
+        print("Successfully generated recommendations - rendering template")
         return render_template('style_recommendations.html',
                              recommendations=recommendations,
                              preferences=preferences,
@@ -1786,7 +1882,7 @@ def generate_style_recommendations_with_links(preferences, user):
         style_profile = analyze_fashion_preferences(preferences, user)
 
         # Generate outfit recommendations
-        outfit_recommendations = generate_outfit_recommendations(style_profile, preferences)
+        outfit_recommendations = generate_outfit_recommendations(style_profile, preferences, user)
 
         # Add shopping links for each recommendation
         recommendations_with_links = add_shopping_links(outfit_recommendations, style_profile)
@@ -1804,53 +1900,370 @@ def generate_style_recommendations_with_links(preferences, user):
         return {}
 
 def get_outfit_images():
-    """High-quality outfit and clothing item images"""
+    """Professional outfit images showcasing specific clothing pieces for board presentation"""
     return {
-        # Work Outfits
-        'blazer_outfit': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'business_casual': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'professional_dress': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        # Female outfit images - Professional styling showcasing actual clothing pieces
+        'female': {
+            # Work Outfits - Professional business attire with clear clothing visibility
+            'blazer_outfit': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'business_casual': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'professional_dress': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
 
-        # Casual Outfits
-        'casual_chic': 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'weekend_comfort': 'https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'denim_style': 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            # Casual Outfits - Stylish everyday wear showcasing outfit pieces
+            'casual_chic': 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'weekend_comfort': 'https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
 
-        # Evening Outfits
-        'little_black_dress': 'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'cocktail_dress': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'elegant_evening': 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            # Evening Outfits - Elegant evening wear with clear garment details
+            'little_black_dress': 'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'cocktail_dress': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
 
-        # Individual Items
-        'white_blouse': 'https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'black_trousers': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'navy_blazer': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'silk_scarf': 'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'leather_handbag': 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'heels': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'sneakers': 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'jewelry': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            # Style-specific outfits - Unique styling with visible clothing elements
+            'bohemian_style': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'edgy_style': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        },
 
-        # Style-specific outfits
-        'bohemian_style': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'minimalist_style': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'romantic_style': 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'edgy_style': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'classic_style': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        # Male outfit images - Professional styling showcasing specific clothing pieces
+        'male': {
+            # Work Outfits - Business attire with clear visibility of suit components
+            'blazer_outfit': 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'business_casual': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'professional_dress': 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
 
-        # Seasonal items
-        'spring_dress': 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'summer_outfit': 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'fall_layers': 'https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        'winter_coat': 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            # Casual Outfits - Smart casual wear showcasing individual pieces
+            'casual_chic': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'weekend_comfort': 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Evening Outfits - Formal evening wear with clear garment details
+            'date_night_smart': 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'formal_evening': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Style-specific outfits - Creative styling with visible clothing elements
+            'bohemian_style': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+            'edgy_style': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        }
     }
 
-def generate_outfit_recommendations(style_profile, preferences):
-    """Generate specific outfit recommendations based on style profile"""
+def get_individual_item_images():
+    """
+    Professional images for individual clothing pieces.
+    Each item has multiple high-quality images focusing on the garment, not the person.
+    """
+    return {
+        'male': {
+            'suit_jacket': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'dress_pants': [
+                'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506629905607-d405b7a30db9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'dress_shirt': [
+                'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'tie': [
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'dress_shoes': [
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'briefcase': [
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'blazer': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'chinos': [
+                'https://images.unsplash.com/photo-1506629905607-d405b7a30db9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'button_down_shirt': [
+                'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'loafers': [
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'leather_bag': [
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'polo_shirt': [
+                'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'watch': [
+                'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'suit': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            # Additional male items for outfit recommendations
+            'dark_jeans': [
+                'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1475178626620-a4d074967452?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'blazer': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'cufflinks': [
+                'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1611652022419-a9419f74343d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'cufflinks': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'dark_jeans': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ]
+        },
+        'female': {
+            'blazer': [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'dress_pants': [
+                'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506629905607-d405b7a30db9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'blouse': [
+                'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'pumps': [
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'structured_bag': [
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'little_black_dress': [
+                'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'heels': [
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'clutch': [
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'statement_earrings': [
+                'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1611652022419-a9419f74343d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'cocktail_dress': [
+                'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'strappy_heels': [
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'evening_bag': [
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'bold_jewelry': [
+                'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1611652022419-a9419f74343d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            # Additional items for work outfits
+            'trousers': [
+                'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506629905607-d405b7a30db9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'cardigan': [
+                'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'loafers': [
+                'https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'tote_bag': [
+                'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'sheath_dress': [
+                'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'statement_necklace': [
+                'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1611652022419-a9419f74343d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ]
+        }
+    }
+
+def get_professional_outfit_images():
+    """
+    Professional outfit images specifically curated for board presentation.
+    Each image clearly showcases the clothing pieces mentioned in outfit recommendations.
+    All images are unique and professionally styled to show specific garments.
+    """
+    return {
+        'male': {
+            # Date Night Smart - Dress shirt, dark jeans, blazer, dress shoes, watch
+            'date_night_smart': 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Formal Evening - Suit, dress shirt, tie, dress shoes, cufflinks
+            'formal_evening': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Business Professional - Suit, dress shirt, tie
+            'business_professional': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Smart Casual - Chinos, polo, loafers
+            'smart_casual': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Blazer Outfit - Blazer, chinos, button-down
+            'blazer_outfit': 'https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        },
+        'female': {
+            # Date Night Chic - Little black dress, heels, clutch, statement earrings
+            'date_night_chic': 'https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Night Out Glam - Cocktail dress, strappy heels, evening bag, bold jewelry
+            'night_out_glam': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Business Professional - Blazer, trousers, blouse
+            'business_professional': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Smart Casual - Midi dress, denim jacket, sneakers
+            'smart_casual': 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+
+            # Blazer Outfit - Blazer, trousers, blouse
+            'blazer_outfit': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        }
+    }
+
+def get_outfit_specific_image(outfit_name, gender, items):
+    """
+    Get a specific professional image for each outfit that showcases the mentioned clothing pieces.
+    This ensures every outfit has a unique, relevant image for board presentation.
+    """
+    professional_images = get_professional_outfit_images()
+
+    # Map outfit names to specific images
+    outfit_image_mapping = {
+        'male': {
+            'Date Night Smart': professional_images['male']['date_night_smart'],
+            'Formal Evening': professional_images['male']['formal_evening'],
+            'Classic Business Suit': professional_images['male']['business_professional'],
+            'Smart Casual Office Look': professional_images['male']['blazer_outfit'],
+            'Professional Polo Look': professional_images['male']['smart_casual'],
+        },
+        'female': {
+            'Date Night Chic': professional_images['female']['date_night_chic'],
+            'Formal Evening': professional_images['female']['night_out_glam'],
+            'Classic Business Suit': professional_images['female']['business_professional'],
+            'Smart Casual Office Look': professional_images['female']['blazer_outfit'],
+            'Dress and Blazer Combo': professional_images['female']['smart_casual'],
+        }
+    }
+
+    # Return specific image or fallback to a default professional image
+    return outfit_image_mapping.get(gender, {}).get(outfit_name,
+        professional_images[gender]['business_professional'] if gender in professional_images else
+        'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80')
+
+def get_item_images_for_outfit(items, gender):
+    """
+    Get multiple images for each clothing item in an outfit.
+    Returns a dictionary with item names as keys and lists of images as values.
+    """
+    item_images_db = get_individual_item_images()
+    item_images = {}
+
+    for item in items:
+        # Normalize item name (remove spaces, convert to lowercase with underscores)
+        item_key = item.lower().replace(' ', '_')
+
+        # Get images for this item
+        if gender in item_images_db and item_key in item_images_db[gender]:
+            item_images[item] = item_images_db[gender][item_key]
+        else:
+            # Fallback to default professional images if specific item not found
+            item_images[item] = [
+                'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            ]
+
+    return item_images
+
+def generate_outfit_recommendations(style_profile, preferences, user=None):
+    """Generate specific outfit recommendations based on style profile and user gender"""
 
     lifestyle = style_profile.get('lifestyle_category', 'balanced')
     style_personality = style_profile.get('style_personality', 'eclectic')
     color_palette = style_profile.get('color_palette', {})
+
+    # Get user's gender for personalized recommendations
+    user_gender = None
+    if user and hasattr(user, 'gender'):
+        user_gender = user.gender.lower() if user.gender else None
+
+    print(f"DEBUG: User object: {user}")
+    print(f"DEBUG: User gender raw: {user.gender if user else 'No user'}")
+    print(f"DEBUG: User gender processed: {user_gender}")
+
+    # Default to 'male' if gender not specified or invalid
+    if not user_gender or user_gender not in ['male', 'female']:
+        user_gender = 'male'
+
+    print(f"DEBUG: Final user_gender: {user_gender}")
 
     # Get outfit images
     outfit_images = get_outfit_images()
@@ -1863,159 +2276,209 @@ def generate_outfit_recommendations(style_profile, preferences):
         'special_occasion': []
     }
 
-    # Work outfits based on lifestyle
+    # Work outfits based on lifestyle and gender
     if lifestyle == 'professional':
-        outfit_categories['work_outfits'] = [
-            {
-                'name': 'Classic Business Suit',
-                'description': 'Tailored blazer with matching trousers or pencil skirt',
-                'items': ['blazer', 'dress_pants', 'blouse', 'pumps', 'structured_bag'],
-                'colors': ['navy', 'charcoal', 'black'],
-                'occasion': 'business_meetings',
-                'formality': 'formal',
-                'image': outfit_images['business_casual'],
-                'item_images': {
-                    'blazer': outfit_images['navy_blazer'],
-                    'dress_pants': outfit_images['black_trousers'],
-                    'blouse': outfit_images['white_blouse'],
-                    'pumps': outfit_images['heels'],
-                    'structured_bag': outfit_images['leather_handbag']
+        if user_gender == 'male':
+            outfit_categories['work_outfits'] = [
+                {
+                    'name': 'Classic Business Suit',
+                    'description': 'Tailored suit with dress shirt and tie',
+                    'items': ['Suit Jacket', 'Dress Pants', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Briefcase'],
+                    'colors': ['Navy', 'Charcoal', 'Black'],
+                    'occasion': 'Business Meetings',
+                    'formality': 'Formal',
+                    'image': get_outfit_specific_image('Classic Business Suit', 'male', ['Suit Jacket', 'Dress Pants', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Briefcase']),
+                    'item_images': get_item_images_for_outfit(['Suit Jacket', 'Dress Pants', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Briefcase'], 'male')
+                },
+                {
+                    'name': 'Smart Casual Office Look',
+                    'description': 'Blazer with chinos and button-down shirt',
+                    'items': ['Blazer', 'Chinos', 'Button Down Shirt', 'Loafers', 'Leather Bag'],
+                    'colors': ['Navy', 'Khaki', 'White'],
+                    'occasion': 'Office Daily',
+                    'formality': 'Business Casual',
+                    'image': get_outfit_specific_image('Smart Casual Office Look', 'male', ['Blazer', 'Chinos', 'Button Down Shirt', 'Loafers', 'Leather Bag']),
+                    'item_images': get_item_images_for_outfit(['Blazer', 'Chinos', 'Button Down Shirt', 'Loafers', 'Leather Bag'], 'male')
+                },
+                {
+                    'name': 'Professional Polo Look',
+                    'description': 'Polo shirt with dress pants and blazer',
+                    'items': ['Polo Shirt', 'Dress Pants', 'Blazer', 'Dress Shoes', 'Watch'],
+                    'colors': ['Navy', 'White', 'Gray'],
+                    'occasion': 'Casual Friday',
+                    'formality': 'Smart Casual',
+                    'image': get_outfit_specific_image('Professional Polo Look', 'male', ['Polo Shirt', 'Dress Pants', 'Blazer', 'Dress Shoes', 'Watch']),
+                    'item_images': get_item_images_for_outfit(['Polo Shirt', 'Dress Pants', 'Blazer', 'Dress Shoes', 'Watch'], 'male')
                 }
-            },
-            {
-                'name': 'Smart Casual Office Look',
-                'description': 'Blouse with tailored trousers and cardigan',
-                'items': ['blouse', 'trousers', 'cardigan', 'loafers', 'tote_bag'],
-                'colors': ['white', 'navy', 'camel'],
-                'occasion': 'office_daily',
-                'formality': 'business_casual',
-                'image': outfit_images['blazer_outfit'],
-                'item_images': {
-                    'blouse': outfit_images['white_blouse'],
-                    'trousers': outfit_images['black_trousers'],
-                    'cardigan': outfit_images['navy_blazer'],
-                    'loafers': outfit_images['sneakers'],
-                    'tote_bag': outfit_images['leather_handbag']
+            ]
+        else:  # female
+            outfit_categories['work_outfits'] = [
+                {
+                    'name': 'Classic Business Suit',
+                    'description': 'Tailored blazer with matching trousers or pencil skirt',
+                    'items': ['Blazer', 'Dress Pants', 'Blouse', 'Pumps', 'Structured Bag'],
+                    'colors': ['Navy', 'Charcoal', 'Black'],
+                    'occasion': 'Business Meetings',
+                    'formality': 'Formal',
+                    'image': get_outfit_specific_image('Classic Business Suit', 'female', ['Blazer', 'Dress Pants', 'Blouse', 'Pumps', 'Structured Bag']),
+                    'item_images': get_item_images_for_outfit(['Blazer', 'Dress Pants', 'Blouse', 'Pumps', 'Structured Bag'], 'female')
+                },
+                {
+                    'name': 'Smart Casual Office Look',
+                    'description': 'Blouse with tailored trousers and cardigan',
+                    'items': ['Blouse', 'Trousers', 'Cardigan', 'Loafers', 'Tote Bag'],
+                    'colors': ['White', 'Navy', 'Camel'],
+                    'occasion': 'Office Daily',
+                    'formality': 'Business Casual',
+                    'image': get_outfit_specific_image('Smart Casual Office Look', 'female', ['Blouse', 'Trousers', 'Cardigan', 'Loafers', 'Tote Bag']),
+                    'item_images': get_item_images_for_outfit(['Blouse', 'Trousers', 'Cardigan', 'Loafers', 'Tote Bag'], 'female')
+                },
+                {
+                    'name': 'Dress and Blazer Combo',
+                    'description': 'Sheath dress with structured blazer',
+                    'items': ['Sheath Dress', 'Blazer', 'Pumps', 'Statement Necklace'],
+                    'colors': ['Black', 'Navy', 'Burgundy'],
+                    'occasion': 'Presentations',
+                    'formality': 'Business Formal',
+                    'image': get_outfit_specific_image('Dress and Blazer Combo', 'female', ['Sheath Dress', 'Blazer', 'Pumps', 'Statement Necklace']),
+                    'item_images': get_item_images_for_outfit(['Sheath Dress', 'Blazer', 'Pumps', 'Statement Necklace'], 'female')
                 }
-            },
-            {
-                'name': 'Dress and Blazer Combo',
-                'description': 'Sheath dress with structured blazer',
-                'items': ['sheath_dress', 'blazer', 'pumps', 'statement_necklace'],
-                'colors': ['black', 'navy', 'burgundy'],
-                'occasion': 'presentations',
-                'formality': 'business_formal',
-                'image': outfit_images['professional_dress'],
-                'item_images': {
-                    'sheath_dress': outfit_images['little_black_dress'],
-                    'blazer': outfit_images['navy_blazer'],
-                    'pumps': outfit_images['heels'],
-                    'statement_necklace': outfit_images['jewelry']
-                }
-            }
-        ]
+            ]
     elif lifestyle == 'creative':
-        outfit_categories['work_outfits'] = [
-            {
-                'name': 'Artistic Professional',
-                'description': 'Unique blazer with creative accessories',
-                'items': ['printed_blazer', 'dark_jeans', 'artistic_top', 'ankle_boots', 'creative_bag'],
-                'colors': ['jewel_tones', 'black', 'artistic_prints'],
-                'occasion': 'creative_meetings',
-                'formality': 'creative_casual',
-                'image': outfit_images['edgy_style'],
-                'item_images': {
-                    'printed_blazer': outfit_images['navy_blazer'],
-                    'dark_jeans': outfit_images['denim_style'],
-                    'artistic_top': outfit_images['white_blouse'],
-                    'ankle_boots': outfit_images['sneakers'],
-                    'creative_bag': outfit_images['leather_handbag']
+        if user_gender == 'male':
+            outfit_categories['work_outfits'] = [
+                {
+                    'name': 'Artistic Professional',
+                    'description': 'Unique blazer with creative accessories',
+                    'items': ['printed_blazer', 'dark_jeans', 'graphic_tee', 'chelsea_boots', 'messenger_bag'],
+                    'colors': ['jewel_tones', 'black', 'artistic_prints'],
+                    'occasion': 'creative_meetings',
+                    'formality': 'creative_casual',
+                    'image': outfit_images['male']['edgy_style']
+                },
+                {
+                    'name': 'Smart Creative Look',
+                    'description': 'Button-down with creative accessories',
+                    'items': ['patterned_shirt', 'dark_jeans', 'blazer', 'loafers', 'leather_bag'],
+                    'colors': ['earth_tones', 'jewel_colors'],
+                    'occasion': 'client_meetings',
+                    'formality': 'creative_business',
+                    'image': outfit_images['male']['bohemian_style']
                 }
+            ]
+        else:  # female
+            outfit_categories['work_outfits'] = [
+                {
+                    'name': 'Artistic Professional',
+                    'description': 'Unique blazer with creative accessories',
+                    'items': ['printed_blazer', 'dark_jeans', 'artistic_top', 'ankle_boots', 'creative_bag'],
+                    'colors': ['jewel_tones', 'black', 'artistic_prints'],
+                    'occasion': 'creative_meetings',
+                    'formality': 'creative_casual',
+                    'image': outfit_images['female']['edgy_style']
+                },
+                {
+                    'name': 'Bohemian Professional',
+                    'description': 'Flowy blouse with structured bottom',
+                    'items': ['bohemian_blouse', 'tailored_pants', 'statement_jewelry', 'block_heels'],
+                    'colors': ['earth_tones', 'jewel_colors'],
+                    'occasion': 'client_meetings',
+                    'formality': 'creative_business',
+                    'image': outfit_images['female']['bohemian_style']
+                }
+            ]
+
+    # Casual outfits based on gender
+    if user_gender == 'male':
+        outfit_categories['casual_outfits'] = [
+            {
+                'name': 'Weekend Comfort',
+                'description': 'Comfortable yet stylish weekend wear',
+                'items': ['comfortable_jeans', 'henley_shirt', 'sneakers', 'baseball_cap'],
+                'colors': color_palette.get('preferred', ['denim', 'neutral']),
+                'occasion': 'weekend_errands',
+                'formality': 'casual',
+                'image': outfit_images['male']['weekend_comfort']
             },
             {
-                'name': 'Bohemian Professional',
-                'description': 'Flowy blouse with structured bottom',
-                'items': ['bohemian_blouse', 'tailored_pants', 'statement_jewelry', 'block_heels'],
-                'colors': ['earth_tones', 'jewel_colors'],
-                'occasion': 'client_meetings',
-                'formality': 'creative_business',
-                'image': outfit_images['bohemian_style'],
-                'item_images': {
-                    'bohemian_blouse': outfit_images['white_blouse'],
-                    'tailored_pants': outfit_images['black_trousers'],
-                    'statement_jewelry': outfit_images['jewelry'],
-                    'block_heels': outfit_images['heels']
-                }
+                'name': 'Smart Casual',
+                'description': 'Elevated casual for social outings',
+                'items': ['chinos', 'polo_shirt', 'loafers', 'watch'],
+                'colors': ['navy', 'khaki', 'white'],
+                'occasion': 'brunch_friends',
+                'formality': 'smart_casual',
+                'image': outfit_images['male']['casual_chic']
+            }
+        ]
+    else:  # female
+        outfit_categories['casual_outfits'] = [
+            {
+                'name': 'Weekend Comfort',
+                'description': 'Comfortable yet stylish weekend wear',
+                'items': ['comfortable_jeans', 'soft_sweater', 'sneakers', 'crossbody_bag'],
+                'colors': color_palette.get('preferred', ['denim', 'neutral']),
+                'occasion': 'weekend_errands',
+                'formality': 'casual',
+                'image': outfit_images['female']['weekend_comfort']
+            },
+            {
+                'name': 'Brunch Ready',
+                'description': 'Elevated casual for social outings',
+                'items': ['midi_dress', 'denim_jacket', 'white_sneakers', 'small_bag'],
+                'colors': ['pastels', 'florals', 'light_colors'],
+                'occasion': 'brunch_friends',
+                'formality': 'smart_casual',
+                'image': outfit_images['female']['casual_chic']
             }
         ]
 
-    # Casual outfits
-    outfit_categories['casual_outfits'] = [
-        {
-            'name': 'Weekend Comfort',
-            'description': 'Comfortable yet stylish weekend wear',
-            'items': ['comfortable_jeans', 'soft_sweater', 'sneakers', 'crossbody_bag'],
-            'colors': color_palette.get('preferred', ['denim', 'neutral']),
-            'occasion': 'weekend_errands',
-            'formality': 'casual',
-            'image': outfit_images['weekend_comfort'],
-            'item_images': {
-                'comfortable_jeans': outfit_images['denim_style'],
-                'soft_sweater': outfit_images['white_blouse'],
-                'sneakers': outfit_images['sneakers'],
-                'crossbody_bag': outfit_images['leather_handbag']
+    # Evening outfits based on gender - Using professional images that showcase clothing pieces
+    if user_gender == 'male':
+        outfit_categories['evening_outfits'] = [
+            {
+                'name': 'Date Night Smart',
+                'description': 'Elegant yet approachable evening look',
+                'items': ['Dress Shirt', 'Dark Jeans', 'Blazer', 'Dress Shoes', 'Watch'],
+                'colors': ['Black', 'Navy', 'Burgundy'],
+                'occasion': 'Dinner Date',
+                'formality': 'Semi-Formal',
+                'image': get_outfit_specific_image('Date Night Smart', 'male', ['Dress Shirt', 'Dark Jeans', 'Blazer', 'Dress Shoes', 'Watch']),
+                'item_images': get_item_images_for_outfit(['Dress Shirt', 'Dark Jeans', 'Blazer', 'Dress Shoes', 'Watch'], 'male')
+            },
+            {
+                'name': 'Formal Evening',
+                'description': 'Sophisticated outfit for special evenings',
+                'items': ['Suit', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Cufflinks'],
+                'colors': ['Black', 'Navy', 'Charcoal'],
+                'occasion': 'Parties Events',
+                'formality': 'Formal',
+                'image': get_outfit_specific_image('Formal Evening', 'male', ['Suit', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Cufflinks']),
+                'item_images': get_item_images_for_outfit(['Suit', 'Dress Shirt', 'Tie', 'Dress Shoes', 'Cufflinks'], 'male')
             }
-        },
-        {
-            'name': 'Brunch Ready',
-            'description': 'Elevated casual for social outings',
-            'items': ['midi_dress', 'denim_jacket', 'white_sneakers', 'small_bag'],
-            'colors': ['pastels', 'florals', 'light_colors'],
-            'occasion': 'brunch_friends',
-            'formality': 'smart_casual',
-            'image': outfit_images['casual_chic'],
-            'item_images': {
-                'midi_dress': outfit_images['spring_dress'],
-                'denim_jacket': outfit_images['denim_style'],
-                'white_sneakers': outfit_images['sneakers'],
-                'small_bag': outfit_images['leather_handbag']
+        ]
+    else:  # female
+        outfit_categories['evening_outfits'] = [
+            {
+                'name': 'Date Night Chic',
+                'description': 'Elegant yet approachable evening look',
+                'items': ['Little Black Dress', 'Heels', 'Clutch', 'Statement Earrings'],
+                'colors': ['Black', 'Navy', 'Burgundy'],
+                'occasion': 'Dinner Date',
+                'formality': 'Semi-Formal',
+                'image': get_outfit_specific_image('Date Night Chic', 'female', ['Little Black Dress', 'Heels', 'Clutch', 'Statement Earrings']),
+                'item_images': get_item_images_for_outfit(['Little Black Dress', 'Heels', 'Clutch', 'Statement Earrings'], 'female')
+            },
+            {
+                'name': 'Formal Evening',
+                'description': 'Sophisticated outfit for special evenings',
+                'items': ['Cocktail Dress', 'Strappy Heels', 'Evening Bag', 'Bold Jewelry'],
+                'colors': ['Jewel Tones', 'Metallics', 'Black'],
+                'occasion': 'Parties Events',
+                'formality': 'Formal',
+                'image': get_outfit_specific_image('Formal Evening', 'female', ['Cocktail Dress', 'Strappy Heels', 'Evening Bag', 'Bold Jewelry']),
+                'item_images': get_item_images_for_outfit(['Cocktail Dress', 'Strappy Heels', 'Evening Bag', 'Bold Jewelry'], 'female')
             }
-        }
-    ]
-
-    # Evening outfits
-    outfit_categories['evening_outfits'] = [
-        {
-            'name': 'Date Night Chic',
-            'description': 'Elegant yet approachable evening look',
-            'items': ['little_black_dress', 'heels', 'clutch', 'statement_earrings'],
-            'colors': ['black', 'navy', 'burgundy'],
-            'occasion': 'dinner_date',
-            'formality': 'semi_formal',
-            'image': outfit_images['little_black_dress'],
-            'item_images': {
-                'little_black_dress': outfit_images['little_black_dress'],
-                'heels': outfit_images['heels'],
-                'clutch': outfit_images['leather_handbag'],
-                'statement_earrings': outfit_images['jewelry']
-            }
-        },
-        {
-            'name': 'Night Out Glam',
-            'description': 'Glamorous outfit for special evenings',
-            'items': ['cocktail_dress', 'strappy_heels', 'evening_bag', 'bold_jewelry'],
-            'colors': ['jewel_tones', 'metallics', 'black'],
-            'occasion': 'parties_events',
-            'formality': 'formal',
-            'image': outfit_images['cocktail_dress'],
-            'item_images': {
-                'cocktail_dress': outfit_images['cocktail_dress'],
-                'strappy_heels': outfit_images['heels'],
-                'evening_bag': outfit_images['leather_handbag'],
-                'bold_jewelry': outfit_images['jewelry']
-            }
-        }
-    ]
+        ]
 
     return outfit_categories
 
