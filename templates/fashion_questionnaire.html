@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}Fashion Style Questionnaire - Fashion Recommendation App{% endblock %}
 
@@ -66,6 +66,7 @@
                         </div>
                     </div>
                 </div>
+<<<<<<< HEAD
             </div>
 
             <!-- Lifestyle Section -->
@@ -89,6 +90,41 @@
                                 <option value="casual">😌 Casual/Relaxed</option>
                                 <option value="social">🎉 Social/Outgoing</option>
                             </select>
+=======
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="gender">Gender</label>
+                        <select class="form-select" name="gender" id="gender" required>
+                            <option value="">Select your gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="age_range">Age Range</label>
+                        <select class="form-select" name="age_range" id="age_range" required>
+                            <option value="">Select your age range</option>
+                            <option value="18-24">18-24</option>
+                            <option value="25-34">25-34</option>
+                            <option value="35-44">35-44</option>
+                            <option value="45-54">45-54</option>
+                            <option value="55+">55+</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Social Activities (Select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="networking" id="networking">
+                                <label class="form-check-label" for="networking">Networking Events</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="social_activities" value="parties" id="parties">
+                                <label class="form-check-label" for="parties">Parties/Celebrations</label>
+                            </div>
+>>>>>>> f6a6641ffa428efe1e936d13705354170710931c
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Work Environment</label>

@@ -1884,8 +1884,18 @@ def generate_style_recommendations_with_links(preferences, user):
         # Generate outfit recommendations
         outfit_recommendations = generate_outfit_recommendations(style_profile, preferences, user)
 
+        # Determine gender for shopping links
+        user_gender = "female"  # Default
+        if user and hasattr(user, 'gender') and user.gender:
+            user_gender = user.gender.lower()
+        elif preferences and 'gender' in preferences and preferences['gender']:
+            user_gender = preferences['gender'].lower()
+
+        if user_gender not in ['male', 'female']:
+            user_gender = "female" # Fallback
+
         # Add shopping links for each recommendation
-        recommendations_with_links = add_shopping_links(outfit_recommendations, style_profile)
+        recommendations_with_links = add_shopping_links(outfit_recommendations, style_profile, user_gender)
 
         return {
             'style_profile': style_profile,
@@ -2259,9 +2269,9 @@ def generate_outfit_recommendations(style_profile, preferences, user=None):
     print(f"DEBUG: User gender raw: {user.gender if user else 'No user'}")
     print(f"DEBUG: User gender processed: {user_gender}")
 
-    # Default to 'male' if gender not specified or invalid
+    # Default to 'female' if gender not specified or invalid, to match shopping links
     if not user_gender or user_gender not in ['male', 'female']:
-        user_gender = 'male'
+        user_gender = 'female'
 
     print(f"DEBUG: Final user_gender: {user_gender}")
 
@@ -2482,7 +2492,7 @@ def generate_outfit_recommendations(style_profile, preferences, user=None):
 
     return outfit_categories
 
-def add_shopping_links(outfit_recommendations, style_profile):
+def add_shopping_links(outfit_recommendations, style_profile, user_gender="female"):
     """Add shopping links to outfit recommendations"""
 
     budget_category = style_profile.get('budget_category', 'moderate')
@@ -2494,7 +2504,7 @@ def add_shopping_links(outfit_recommendations, style_profile):
     # Add links to each outfit
     for category, outfits in outfit_recommendations.items():
         for outfit in outfits:
-            outfit['shopping_links'] = generate_item_links(outfit['items'], shopping_sources)
+            outfit['shopping_links'] = generate_item_links(outfit['items'], shopping_sources, user_gender)
             outfit['total_estimated_cost'] = calculate_outfit_cost(outfit['items'], budget_category)
 
     return outfit_recommendations
@@ -2547,8 +2557,8 @@ def get_shopping_sources(budget_category, sustainability_score):
 
     return sources.get(budget_category, sources['moderate'])
 
-def generate_item_links(items, shopping_sources):
-    """Generate shopping links for specific clothing items"""
+def generate_item_links(items, shopping_sources, user_gender="female"):
+    """Generate gender-specific shopping links for clothing items"""
 
     item_categories = {
         'blazer': 'blazers',
@@ -2593,10 +2603,12 @@ def generate_item_links(items, shopping_sources):
     for item in items:
         category = item_categories.get(item, 'clothing')
         for source in shopping_sources:
+            # Add gender to search query for better results
+            search_query = f"{user_gender} {item.replace('_', ' ')}"
             link = {
                 'item': item.replace('_', ' ').title(),
                 'store': source['name'],
-                'url': f"{source['url']}/search?q={item.replace('_', '+')}&category={category}",
+                'url': f"{source['url']}/search?q={search_query.replace(' ', '+')}",
                 'type': source['type']
             }
             links.append(link)
