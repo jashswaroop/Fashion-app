@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}Fashion Style Questionnaire - Fashion Recommendation App{% endblock %}
 
@@ -40,6 +40,27 @@
                             <option value="remote">Work from Home</option>
                             <option value="retail">Customer-Facing</option>
                             <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="gender">Gender</label>
+                        <select class="form-select" name="gender" id="gender" required>
+                            <option value="">Select your gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="age_range">Age Range</label>
+                        <select class="form-select" name="age_range" id="age_range" required>
+                            <option value="">Select your age range</option>
+                            <option value="18-24">18-24</option>
+                            <option value="25-34">25-34</option>
+                            <option value="35-44">35-44</option>
+                            <option value="45-54">45-54</option>
+                            <option value="55+">55+</option>
                         </select>
                     </div>
                 </div>
